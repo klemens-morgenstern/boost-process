@@ -22,4 +22,4 @@ script:
     - ../../../b2 cxxflags=--coverage linkflags=--coverage
 
 after_success:
-    - coveralls -r ../../..
+    - coveralls -r ../../.. --include boost/process
