@@ -6,6 +6,7 @@ compiler:
 
 before_install:
     - sudo apt-get install -qq p7zip-full
+    - sudo pip install cpp-coveralls
 
 install:
     - wget -O boost_1_57_0.7z http://sourceforge.net/projects/boost/files/boost/1.57.0/boost_1_57_0.7z/download
@@ -18,4 +19,7 @@ install:
 
 script:
     - cd boost_1_57_0/libs/process/test
-    - ../../../b2
+    - ../../../b2 cxxflags=--coverage linkflags=--coverage
+
+after_success:
+    - coveralls -r ../../.. --include libs/process/test
