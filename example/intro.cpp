@@ -9,6 +9,7 @@
 
 //[intro
 #include <boost/process.hpp>
+#include <iostream> 
 
 using namespace boost::process;
 
