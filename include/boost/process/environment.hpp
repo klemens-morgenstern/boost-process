@@ -667,7 +667,7 @@ inline std::vector<boost::filesystem::path> path()
     typedef typename ::boost::process::wnative_environment::const_entry_type value_type;
     const auto id = L"PATH";
 #else
-    const ::boost::process::native_environment ne;
+    const ::boost::process::native_environment ne{};
     typedef typename ::boost::process::native_environment::const_entry_type value_type;
     const auto id = "PATH";
 #endif

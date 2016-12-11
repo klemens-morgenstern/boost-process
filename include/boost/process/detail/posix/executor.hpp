@@ -22,6 +22,10 @@
 #include <errno.h>
 #include <unistd.h>
 
+#ifdef __APPLE__
+extern char **environ;
+#endif
+
 namespace boost { namespace process { namespace detail { namespace posix {
 
 template<typename Executor>
