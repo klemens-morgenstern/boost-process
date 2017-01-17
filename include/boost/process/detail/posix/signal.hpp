@@ -14,6 +14,10 @@
 #include <boost/process/detail/posix/handler.hpp>
 #include <signal.h>
 
+#ifdef __APPLE__
+typedef void(*sighandler_t)(int);
+#endif
+
 namespace boost { namespace process { namespace detail { namespace posix {
 
 struct sig_init_ : handler_base_ext
