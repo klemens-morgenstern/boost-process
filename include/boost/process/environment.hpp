@@ -326,9 +326,8 @@ public:
     }
     void clear()
     {
-        for (auto && i : *this)
-            implementation_type::reset(i.get_name());
-        this->reload();
+        while (!empty())
+            implementation_type::reset(begin()->get_name());
     }
 
     entry_type  at( const string_type& key )
