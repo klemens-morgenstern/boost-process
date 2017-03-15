@@ -170,7 +170,7 @@ inline std::string convert(const std::wstring & st,
                            const ::boost::process::codecvt_type & cvt =
                                 ::boost::process::codecvt())
 {
-    std::string out(st.size() * 2, ' '); //just to be sure
+    std::string out((st.size() + 1) * 2, ' '); //just to be sure
     auto sz = convert(st.c_str(), st.c_str() + st.size(),
                       &out.front(), &out.back(), cvt);
 

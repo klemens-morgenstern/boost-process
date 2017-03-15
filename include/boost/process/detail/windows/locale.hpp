@@ -45,10 +45,12 @@ class windows_file_codecvt
              ::boost::detail::winapi::CP_ACP_ :
              ::boost::detail::winapi::CP_OEMCP_;
 
-     int count;
-     if ((count = ::boost::detail::winapi::MultiByteToWideChar(codepage,
+     int count = 0;
+     int size = static_cast<int>(from_end - from);
+     // if size is 0, the function fails
+     if (size != 0 && (count = ::boost::detail::winapi::MultiByteToWideChar(codepage,
              ::boost::detail::winapi::MB_PRECOMPOSED_, from,
-       static_cast<int>(from_end - from), to, static_cast<int>(to_end - to))) == 0)
+       size, to, static_cast<int>(to_end - to))) == 0)
      {
        return error;  // conversion failed
      }
@@ -68,10 +70,12 @@ class windows_file_codecvt
                        ::boost::detail::winapi::CP_ACP_ :
                      ::boost::detail::winapi::CP_OEMCP_;
 
-     int count;
-     if ((count = ::boost::detail::winapi::WideCharToMultiByte(codepage,
+     int count = 0;
+     int size = static_cast<int>(from_end - from);
+     // if size is 0, the function fails
+     if (size != 0 && (count = ::boost::detail::winapi::WideCharToMultiByte(codepage,
                    ::boost::detail::winapi::WC_NO_BEST_FIT_CHARS_, from,
-                  static_cast<int>(from_end - from), to, static_cast<int>(to_end - to), 0, 0)) == 0)
+                  size, to, static_cast<int>(to_end - to), 0, 0)) == 0)
      {
        return error;  // conversion failed
      }
