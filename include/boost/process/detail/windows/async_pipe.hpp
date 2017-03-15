@@ -345,16 +345,16 @@ async_pipe::operator basic_pipe<CharT, Traits>()
     auto source_in = _source.native();
     auto sink_in   = _sink.native();
 
-    if (source == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
-        _source = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
+    if (source_in == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
+        source = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::detail::winapi::DuplicateHandle(
             proc, source_in, proc, &source, 0,
             static_cast<::boost::detail::winapi::BOOL_>(true),
              ::boost::detail::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
-    if (sink == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
-        _sink = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
+    if (sink_in == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
+        sink = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::detail::winapi::DuplicateHandle(
             proc, sink_in, proc, &sink, 0,
             static_cast<::boost::detail::winapi::BOOL_>(true),
