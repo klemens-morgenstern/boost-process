@@ -274,41 +274,30 @@ inline void  basic_environment_impl<Char>::reset(const string_type &id)
     if (id.size() >= _data.size()) //ok, so it's impossible id is in there.
         return;
 
-    //check if it's the first one, spares us the search.
-    if (std::equal(id.begin(), id.end(), _data.begin()) && (_data[id.size()] == equal_sign<Char>()))
+    auto erase_to_zero = [&](auto beg)
     {
-        auto beg = _data.begin();
         auto end = beg;
 
         while (*end != '\0')
-           end++;
+            ++end;
 
-        end++; //to point behind the last null-char
+        ++end; //to point behind the last null-char
 
         _data.erase(beg, end); //and remove the thingy
+        reload();
+    };
 
-    }
+    //check if it's the first one, spares us the search.
+    if (std::equal(id.begin(), id.end(), _data.begin()) && (_data[id.size()] == equal_sign<Char>()))
+        erase_to_zero(_data.begin());
 
     std::vector<Char> seq = {'\0'}; //using a vector, because strings might cause problems with nullchars
     seq.insert(seq.end(), id.begin(), id.end());
     seq.push_back('=');
 
     auto itr = std::search(_data.begin(), _data.end(), seq.begin(), seq.end());
-
-    if (itr == _data.end())
-        return;//nothing to return if it's empty anyway...
-
-    auto end = itr;
-
-    while (*end != '\0')
-        end++;
-
-    end ++; //to point behind the last null-char
-
-    _data.erase(itr, end);//and remove it
-    reload();
-
-
+    if (itr != _data.end())
+        erase_to_zero(++itr);
 }
 
 template<typename Char>
