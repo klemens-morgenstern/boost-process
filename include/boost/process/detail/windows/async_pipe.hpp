@@ -85,7 +85,7 @@ public:
     }
 
     template<class CharT, class Traits = std::char_traits<CharT>>
-    inline explicit operator basic_pipe<CharT, Traits>() const;
+    inline explicit operator basic_pipe<CharT, Traits>();
 
     void cancel()
     {
@@ -334,7 +334,7 @@ async_pipe& async_pipe::operator=(async_pipe && rhs)
 }
 
 template<class CharT, class Traits>
-async_pipe::operator basic_pipe<CharT, Traits>() const
+async_pipe::operator basic_pipe<CharT, Traits>()
 {
     auto proc = ::boost::detail::winapi::GetCurrentProcess();
 
@@ -342,8 +342,8 @@ async_pipe::operator basic_pipe<CharT, Traits>() const
     ::boost::detail::winapi::HANDLE_ sink;
 
     //cannot get the handle from a const object.
-    auto source_in = const_cast<::boost::asio::windows::stream_handle &>(_source).native();
-    auto sink_in   = const_cast<::boost::asio::windows::stream_handle &>(_sink).native();
+    auto source_in = _source.native();
+    auto sink_in   = _sink.native();
 
     if (source == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
         _source = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
