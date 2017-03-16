@@ -85,7 +85,7 @@ public:
     }
 
     template<class CharT, class Traits = std::char_traits<CharT>>
-    inline explicit operator basic_pipe<CharT, Traits>() const;
+    inline explicit operator basic_pipe<CharT, Traits>();
 
     void cancel()
     {
@@ -334,7 +334,7 @@ async_pipe& async_pipe::operator=(async_pipe && rhs)
 }
 
 template<class CharT, class Traits>
-async_pipe::operator basic_pipe<CharT, Traits>() const
+async_pipe::operator basic_pipe<CharT, Traits>()
 {
     auto proc = ::boost::detail::winapi::GetCurrentProcess();
 
@@ -342,19 +342,19 @@ async_pipe::operator basic_pipe<CharT, Traits>() const
     ::boost::detail::winapi::HANDLE_ sink;
 
     //cannot get the handle from a const object.
-    auto source_in = const_cast<::boost::asio::windows::stream_handle &>(_source).native();
-    auto sink_in   = const_cast<::boost::asio::windows::stream_handle &>(_sink).native();
+    auto source_in = _source.native();
+    auto sink_in   = _sink.native();
 
-    if (source == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
-        _source = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
+    if (source_in == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
+        source = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::detail::winapi::DuplicateHandle(
             proc, source_in, proc, &source, 0,
             static_cast<::boost::detail::winapi::BOOL_>(true),
              ::boost::detail::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
-    if (sink == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
-        _sink = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
+    if (sink_in == ::boost::detail::winapi::INVALID_HANDLE_VALUE_)
+        sink = ::boost::detail::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::detail::winapi::DuplicateHandle(
             proc, sink_in, proc, &sink, 0,
             static_cast<::boost::detail::winapi::BOOL_>(true),
