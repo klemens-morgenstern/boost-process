@@ -26,7 +26,8 @@ struct start_dir_init : handler_base_ext
     template <class PosixExecutor>
     void on_exec_setup(PosixExecutor&) const
     {
-        ::chdir(s_.c_str());
+        if (!s_.empty())
+            ::chdir(s_.c_str());
     }
     const string_type & str() const {return s_;}
 private:

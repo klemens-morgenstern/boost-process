@@ -23,7 +23,8 @@ struct start_dir_init : handler_base_ext
     template <class Executor>
     void on_setup(Executor& exec) const
     {
-        exec.work_dir = s_.c_str();
+        if (!s_.empty())
+            exec.work_dir = s_.c_str();
     }
 
     const std::basic_string<Char> &str() const {return s_;}
