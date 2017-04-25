@@ -58,7 +58,7 @@ invoke the gcc compiler to compile a simple program.
 With the standard library this looks like this.
 
 ```
-int result = std::system("g++ main.cpp"); 
+int result = std::system("g++ main.cpp");
 ```
 
 Which we can write exactly like this in boost.process.
@@ -68,10 +68,10 @@ namespace bp = boost::process; //we will assume this for all further examples
 int result = bp::system("g++ main.cpp");
 ```
 
-If a single string (or the explicit form bp::cmd), it will be interpreted as a command line. 
-That will cause the execution function to search the `PATH` variable to find the executable. 
+If a single string (or the explicit form bp::cmd), it will be interpreted as a command line.
+That will cause the execution function to search the `PATH` variable to find the executable.
 The alternative is the `exe-args` style, where the first string will be interpreted as a filename (including the path),
-and the rest as arguments passed to said function.   
+and the rest as arguments passed to said function.
 
 [note For more details on the `cmd`/`exe-args` style look [link boost_process.design.arg_cmd_style here]]
 
@@ -81,7 +81,7 @@ So as a first step, we'll use the `exe-args` style.
 int result = bp::system("/usr/bin/g++", "main.cpp");
 ```
 
-With that sytax we still have "g++" hard-coded, so let's assume we get the string
+With that syntax we still have "g++" hard-coded, so let's assume we get the string
 from an external source as `boost::filesystem::path`, we can do this too.
 
 ```
@@ -89,7 +89,7 @@ boost::filesystem::path p = "/usr/bin/g++"; //or get it from somewhere else.
 int result = bp::system(p, "main.cpp");
 ```
 
-Now we might want to find the `g++` executable in the `PATH`-variable, as the `cmd` syntax would do. 
+Now we might want to find the `g++` executable in the `PATH`-variable, as the `cmd` syntax would do.
 `Boost.process` provides a function to this end: bp::search_path.
 
 ```
@@ -97,24 +97,24 @@ boost::filesystem::path p = bp::search_path("g++"); //or get it from somewhere e
 int result = bp::system(p, "main.cpp");
 ```
 
-[note [funcref boost::process::search_path search_path] will search for any executable with that name. 
+[note [funcref boost::process::search_path search_path] will search for any executable with that name.
 This also includes to add a file suffix on windows, such as `.exe` or `.bat`.]
 
 [endsect]
 
 [section:launch_mode Launch functions]
 
-Given that in our example used the [funcref boost::process::system system] function, 
-our program will wait until the child process is completed. This maybe unwanted, 
-especially since compiling can take a while. 
+Given that in our example used the [funcref boost::process::system system] function,
+our program will wait until the child process is completed. This maybe unwanted,
+especially since compiling can take a while.
 
 In order to avoid that, boost.process provides several ways to launch a process.
-Besides the already mentioned [funcref boost::process::system system] function and it's 
-asynchronous version [funcref boost::process::async_system async_system], 
+Besides the already mentioned [funcref boost::process::system system] function and it's
+asynchronous version [funcref boost::process::async_system async_system],
 we can also use the [funcref boost::process::spawn spawn] function or the
 [classref boost::process::child child] class.
 
-The [funcref boost::process::spawn spawn] function launches a process and 
+The [funcref boost::process::spawn spawn] function launches a process and
 immediately detaches it, so no handle will be returned and the process will be ignored.
 This is not what we need for compiling, but maybe we want to entertain the user,
 while compiling:
@@ -123,7 +123,7 @@ while compiling:
 bp::spawn(bp::search_path("chrome"), boost_org);
 ```
 
-Now for the more sensible approach for compiling: a non-blocking execution. 
+Now for the more sensible approach for compiling: a non-blocking execution.
 To implement that, we directly call the constructor of [classref boost::process::child child].
 
 ```
@@ -132,26 +132,26 @@ bp::child c(bp::search_path("g++"), "main.cpp");
 while (c.child_running())
     do_some_stuff();
 
-c.child_wait(); //wait for the process to exit   
+c.child_wait(); //wait for the process to exit
 int result = c.child_exit_code();
 ```
 
 So we launch the process, by calling the child constructor. Then we check and do other
-things while the process is running and afterwards get the exit code. The call 
+things while the process is running and afterwards get the exit code. The call
 to child_wait is necessary, to obtain it and tell the operating system, that no
 one is waiting for the process anymore.
 
 [note You can also wait for a time span or a until a time point with __wait_for__ and __wait_until__]
 
 [warning If you don't call wait on a child object, it will be terminated on destruction.
-This can be avoided by calling __detach__ beforehand]  
+This can be avoided by calling __detach__ beforehand]
 
 [endsect]
 [section:error_handling Error]
 
-Until now, we have assumed that everything works out, but it is not impossible, 
+Until now, we have assumed that everything works out, but it is not impossible,
 that "g++" is not present. That will cause the launch of the process to fail.
-The default behaviour of all functions is to throw an 
+The default behaviour of all functions is to throw an
 [@http://en.cppreference.com/w/cpp/error/system_error std::system_error] on failure.
 As with many other functions in this library, passing an [@http://en.cppreference.com/w/cpp/error/error_code std::error_code]
 will change the behaviour, so that instead of throwing an exception, the error will be a assigned to the error code.
@@ -163,13 +163,13 @@ bp::system c("g++ main.cpp", ec);
 [endsect]
 [section:io Synchronous I/O]
 
-In the examples given above, we have only started a program, but did not consider the output. 
+In the examples given above, we have only started a program, but did not consider the output.
 The default depends on the system, but usually this will just write it to the same output as the launching process.
 If this shall be guaranteed, the streams can be explicitly forwarded like this.
 
 ```
    bp::system("g++ main.cpp", bp::std_out > stdout, bp::std_err > stderr, bp::std_in < stdin);
-``` 
+```
 
 Now for the first example, we might want to just ignore the output, which can be done by redirecting it to the null-device.
 This can be achieved this way:
@@ -184,16 +184,16 @@ Alternatively we can also easily redirect the output to a file:
 bp::system("g++ main.cpp", bp::std_out > "gcc_out.log");
 ```
 
-Now, let's take a more visual example for reading data. 
-[@http://pubs.opengroup.org/onlinepubs/009696699/utilities/nm.html nm] is a tool on posix, 
-which reads the outline, i.e. a list of all entry points, of a binary. 
-Every entry point will be put into a single line, and we will use a pipe to read it. 
+Now, let's take a more visual example for reading data.
+[@http://pubs.opengroup.org/onlinepubs/009696699/utilities/nm.html nm] is a tool on posix,
+which reads the outline, i.e. a list of all entry points, of a binary.
+Every entry point will be put into a single line, and we will use a pipe to read it.
 At the end an empty line is appended, which we use as the indication to stop reading.
-Boost.process provides the pipestream ([classref boost::process::ipstream ipstream], 
+Boost.process provides the pipestream ([classref boost::process::ipstream ipstream],
 [classref boost::process::opstream opstream], [classref boost::process::pstream pstream]) to
-wrap around the [classref boost::process::pipe pipe] and provide an implementation of the 
+wrap around the [classref boost::process::pipe pipe] and provide an implementation of the
 [@http://en.cppreference.com/w/cpp/io/basic_istream std::istream],
-[@http://en.cppreference.com/w/cpp/io/basic_ostream std::ostream] and 
+[@http://en.cppreference.com/w/cpp/io/basic_ostream std::ostream] and
 [@http://en.cppreference.com/w/cpp/io/basic_iostream std::iostream] interface.
 
 ```
@@ -201,16 +201,16 @@ std::vector<std::string> read_outline(std::string & file)
 {
     bp::ipstream is; //reading pipe-stream
     bp::child c(bp::search_patk("nm"), file, bp::std_out > is);
-    
+
     std::vector<std::string> data;
     std::string line;
-    
+
     while (c.child_running() && std::getline(is, line) && !line.empty())
-        data.push_back(line);    
-        
+        data.push_back(line);
+
     c.child_wait();
-    
-    return data; 
+
+    return data;
 }
 ```
 
@@ -218,10 +218,10 @@ What this does is redirect the `stdout` of the process into a pipe and we read t
 synchronously.
 
 [warning The pipe will cause a deadlock if you try to read after nm exited]
-[note You can do the same thing with [globalref boost::process::std_err std_err]] 
+[note You can do the same thing with [globalref boost::process::std_err std_err]]
 
 Now we get the name from `nm` and we might want to demangle it, so we use input and output.
-`nm` has a demangle option, but for the sake of the example, we'll use 
+`nm` has a demangle option, but for the sake of the example, we'll use
 [@https://sourceware.org/binutils/docs/binutils/c_002b_002bfilt.html c++filt] for this.
 
 ```
@@ -244,31 +244,31 @@ std::vector<std::string> read_demangled_outline(const std::string & file)
 {
     bp::pipe p;
     bp::ipstream is;
-    
+
     std::vector<std::string> outline;
-    
-    //we just use the same pipe, so the 
-    bp::child nm(bp::search_path("nm"), file,  bp::std_out > p); 
+
+    //we just use the same pipe, so the
+    bp::child nm(bp::search_path("nm"), file,  bp::std_out > p);
     bp::child filt(bp::search_path("c++filt"), bp::std_in < p, bp::std_out > is);
-    
+
     std::string line;
     while (filt.running() && std::getline(is, line)) //when nm finished the pipe closes and c++filt exits
         outline.push_back(line);
 
     nm.child_wait();
-    filt.wait(); 
+    filt.wait();
 }
 
-```  
+```
 
 This forwards the data from `nm` to `c++filt` without your process needing to do anything.
 
 [endsect]
 [section:async_io Asynchronous I/O]
 
-Boost.process allows the usage of boost.asio to implement asynchronous I/O. 
-If you are familiar with [@http://www.boost.org/doc/libs/release/libs/asio/ boost.asio] (which we highly recommend), 
-you can use [classref boost::process::async_pipe async_pipe] which is implemented 
+Boost.process allows the usage of boost.asio to implement asynchronous I/O.
+If you are familiar with [@http://www.boost.org/doc/libs/release/libs/asio/ boost.asio] (which we highly recommend),
+you can use [classref boost::process::async_pipe async_pipe] which is implemented
 as an I/O-Object and can be used like [classref boost::process::pipe pipe] as shown above.
 
 Now we get back to our compiling example. `nm` we might analyze it line by line,
@@ -284,7 +284,7 @@ bp::async_pipe ap(ios);
 
 bp::child c(bp::search_path("g++"), "main.cpp", bp::std_out > ap);
 
-asio_async_read(ap, asio_buffer(buf), 
+asio_async_read(ap, asio_buffer(buf),
                 [](const boost::system::error_code &ec, std::size_t size){});
 
 ios.run();
@@ -292,8 +292,8 @@ c.wait();
 int result = c.exit_code();
 ```
 
-To make it easier, boost.process provides simpler interface for that, so that the buffer can be passed directly, 
-provided we also pass a reference to an io_service. 
+To make it easier, boost.process provides simpler interface for that, so that the buffer can be passed directly,
+provided we also pass a reference to an io_service.
 
 ```
 io_service ios;
@@ -306,9 +306,9 @@ c.wait();
 int result = c.exit_code();
 ```
 
-[note Passing an instance of io_service to the launching function automatically cause it to wait asynchronously for the exit, so no call of 
+[note Passing an instance of io_service to the launching function automatically cause it to wait asynchronously for the exit, so no call of
 [memberref boost::process::child::wait wait] is needed]
- 
+
 To make it even easier, you can use [@http://en.cppreference.com/w/cpp/thread/future std::future] for asynchronous operations
 (you will still need to pass a reference to a io_service) to the launching function, unless you use bp::system or bp::async_system.
 
@@ -320,9 +320,9 @@ boost::asio::io_service ios;
 std::future<std::string> data;
 
 child c("g++", "main.cpp", //set the input
-        bp::std_in.close(), 
+        bp::std_in.close(),
         bp::std_out > bp::null, //so it can be written without anything
-        bp::std_err > data, 
+        bp::std_err > data,
         ios);
 
 
@@ -334,10 +334,10 @@ auto err =  data.get();
 [endsect]
 [section:group Groups]
 
-When launching several processes, processes can be grouped together. 
-This will also apply for a child process, that launches other processes, 
-if they do not modify the group membership. E.g. if you call `make` which 
-launches other processes and call terminate on it, 
+When launching several processes, processes can be grouped together.
+This will also apply for a child process, that launches other processes,
+if they do not modify the group membership. E.g. if you call `make` which
+launches other processes and call terminate on it,
 it will not terminate all the child processes of the child unless you use a group.
 
 The two main reasons to use groups are:
@@ -345,8 +345,8 @@ The two main reasons to use groups are:
 # Being able two terminate child processes of the child process
 # Grouping several processes into one, just so they can be terminated at once
 
-If we have program like `make`, which does launch it's own child processes, 
-a call of child_terminate might not suffice. I.e. if we have a makefile launching `gcc` 
+If we have program like `make`, which does launch it's own child processes,
+a call of child_terminate might not suffice. I.e. if we have a makefile launching `gcc`
 and use the following code, the `gcc` process will still run afterwards:
 
 ```
@@ -362,17 +362,17 @@ bp::group g;
 bp::child c("make", g);
 if (!g.group_wait_for(std::chrono::seconds(10))
     g.group_terminate();
-    
+
 c.child_wait(); //to avoid a zombie process & get the exit code
 ```
 
-Now given the example, we still call child_wait to avoid a zombie process. 
+Now given the example, we still call child_wait to avoid a zombie process.
 An easier solution for that might be to use [funcref boost::process::spawn spawn].
 
 
-To put two processes into one group, the following code suffices. Spawn already 
-launches a detached process (i.e. without a child-handle), but they can be grouped, 
-to that in the case of a problem, RAII is still a given. 
+To put two processes into one group, the following code suffices. Spawn already
+launches a detached process (i.e. without a child-handle), but they can be grouped,
+to that in the case of a problem, RAII is still a given.
 
 ```
 void f()
@@ -380,14 +380,14 @@ void f()
     bp::group g;
     bp::spawn("foo", g);
     bp::spawn("bar", g);
-    
+
     do_something();
-    
+
     g.group_wait();
 };
 ```
 
-In the example, it will wait for both processes at the end of the function unless 
+In the example, it will wait for both processes at the end of the function unless
 an exception occures. I.e. if an exception is thrown, the group will be terminated.
 
 
@@ -406,15 +406,15 @@ auto env = boost::this_process::environment();
 env["VALUE_1"] = "foo";
 
 //copy it into a environment seperate to the one of this process
-bp::environment env_ = env;  
+bp::environment env_ = env;
 //append two values to a variable in the new env
 env_["VALUE_2"] += {"bar1", "bar2"};
 
 //launch a process with `env_`
-bp::system("stuff", env_); 
+bp::system("stuff", env_);
 ```
 
-A more convenient way to modify the environment for the child is the 
+A more convenient way to modify the environment for the child is the
 [globalref boost::process::env env] property, which the example as following:
 
 ```
