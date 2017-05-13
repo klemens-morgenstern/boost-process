@@ -20,8 +20,12 @@
  */
 
 #include <boost/process/args.hpp>
+
+#ifndef WITHOUT_ASIO
 #include <boost/process/async.hpp>
 #include <boost/process/async_system.hpp>
+#endif
+
 #include <boost/process/group.hpp>
 #include <boost/process/child.hpp>
 #include <boost/process/cmd.hpp>
