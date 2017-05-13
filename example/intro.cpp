@@ -8,6 +8,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //[intro
+#include <iostream>
 #include <boost/process.hpp>
 
 using namespace boost::process;
