@@ -154,10 +154,10 @@ struct named_pipe_test_fixture
 };
 
 #if defined(BOOST_POSIX_API)
+    const bfs::path named_pipe_test_fixture::tmp_path = bfs::temp_directory_path();
+#elif defined(BOOST_WINDOWS_API)
     // https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa365150.aspx
     const bfs::path named_pipe_test_fixture::tmp_path = "\\\\.\\pipe";
-#elif defined(BOOST_WINDOWS_API)
-    const bfs::path named_pipe_test_fixture::tmp_path = bfs::temp_directory_path();
 #endif
 
 }
