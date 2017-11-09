@@ -12,6 +12,7 @@
 #include <vector>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <boost/config.hpp>
 #include <boost/process/async_pipe.hpp>
 #include <boost/process/pipe.hpp>
 #include <boost/asio/read.hpp>
@@ -93,6 +94,8 @@ namespace
 {
 struct named_pipe_test_fixture
 {
+    static const bfs::tmp_path;
+
     asio::io_context ioc;
 
     boost::uuids::random_generator uuidGenerator;
@@ -111,7 +114,7 @@ struct named_pipe_test_fixture
     : ioc{}
     // generate a unique random path/name for for the pipe
     , uuidGenerator{}
-    , pipe_path{bfs::temp_directory_path() / boost::uuids::to_string(uuidGenerator())}
+    , pipe_path{tmp_path / boost::uuids::to_string(uuidGenerator())}
     , pipe_name{pipe_path.string()}
     // create and open the pipe "file"
     , created_pipe{ioc, pipe_name}
@@ -149,6 +152,14 @@ struct named_pipe_test_fixture
         BOOST_CHECK(!bfs::exists(pipe_path));
     }
 };
+
+#if defined(BOOST_POSIX_API)
+    // https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa365150.aspx
+    const bfs::path named_pipe_test_fixture::tmp_path = "\\\\.\\pipe";
+#elif defined(BOOST_WINDOWS_API)
+    const bfs::path named_pipe_test_fixture::tmp_path = bfs::temp_directory_path();
+#endif
+
 }
 
 BOOST_FIXTURE_TEST_SUITE(existing_named_pipe_plain_async, named_pipe_test_fixture)
