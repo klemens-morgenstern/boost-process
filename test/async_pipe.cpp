@@ -107,7 +107,7 @@ struct named_pipe_test_fixture
 
     asio::streambuf buf;
 
-    void named_pipe_test_fixture()
+    named_pipe_test_fixture()
     : ioc{}
     // generate a unique random path/name for for the pipe
     , uuidGenerator{}
