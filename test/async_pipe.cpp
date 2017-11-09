@@ -18,10 +18,15 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/asio/streambuf.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 using namespace std;
 namespace bp = boost::process;
 namespace asio = boost::asio;
+namespace bfs = boost::filesystem;
 
 BOOST_AUTO_TEST_CASE(plain_async, *boost::unit_test::timeout(5))
 {
@@ -83,3 +88,87 @@ BOOST_AUTO_TEST_CASE(multithreaded_async_pipe)
     for (auto &t : threads)
         t.join();
 }
+
+namespace
+{
+struct named_pipe_test_fixture
+{
+    asio::io_context ioc;
+
+    boost::uuids::random_generator uuidGenerator;
+    const bfs::path pipe_path;
+    const std::string pipe_name;
+
+    bp::async_pipe created_pipe;
+    bp::async_pipe opened_pipe;
+
+    const char delim;
+    const std::string st;
+
+    asio::streambuf buf;
+
+    void named_pipe_test_fixture()
+    : ioc{}
+    // generate a unique random path/name for for the pipe
+    , uuidGenerator{}
+    , pipe_path{bfs::temp_directory_path() / boost::uuids::to_string(uuidGenerator())}
+    , pipe_name{pipe_path.string()}
+    // create and open the pipe "file"
+    , created_pipe{ioc, pipe_name}
+    // open the existing pipe
+    , opened_pipe{ioc, pipe_name, true}
+    //
+    , delim{'\n'}
+    , st{std::string("test-string") + delim}
+    , buf{}
+    {
+        BOOST_CHECK(created_pipe.is_open());
+        BOOST_CHECK(bfs::exists(pipe_path));
+
+        BOOST_CHECK(opened_pipe.is_open());
+    }
+
+    ~named_pipe_test_fixture()
+    {
+        ioc.run();
+
+        std::string line;
+        std::istream istr(&buf);
+        BOOST_CHECK(std::getline(istr, line));
+
+        line.resize(st.length());
+        BOOST_CHECK_EQUAL(line, st);
+
+        // close pipes
+        created_pipe.close();
+        BOOST_CHECK(!created_pipe.is_open());
+        opened_pipe.close();
+        BOOST_CHECK(!opened_pipe.is_open());
+        // cleanup
+        bfs::remove(pipe_path);
+        BOOST_CHECK(!bfs::exists(pipe_path));
+    }
+};
+}
+
+BOOST_FIXTURE_TEST_SUITE(existing_named_pipe_plain_async, named_pipe_test_fixture)
+
+BOOST_AUTO_TEST_CASE(existing_named_pipe_plain_async_opened_pipe)
+{
+    asio::async_write(opened_pipe, asio::buffer(st), [](const boost::system::error_code &, std::size_t){});
+    asio::async_read_until(opened_pipe, buf, delim, [](const boost::system::error_code &, std::size_t){});
+}
+
+BOOST_AUTO_TEST_CASE(existing_named_pipe_plain_async_created_to_opened_pipe)
+{
+    asio::async_write(created_pipe, asio::buffer(st), [](const boost::system::error_code &, std::size_t){});
+    asio::async_read_until(opened_pipe, buf, delim, [](const boost::system::error_code &, std::size_t){});
+}
+
+BOOST_AUTO_TEST_CASE(existing_named_pipe_plain_async_opened_to_created_pipe)
+{
+    asio::async_write(opened_pipe, asio::buffer(st), [](const boost::system::error_code &, std::size_t){});
+    asio::async_read_until(created_pipe, buf, delim, [](const boost::system::error_code &, std::size_t){});
+}
+
+BOOST_AUTO_TEST_SUITE_END()
