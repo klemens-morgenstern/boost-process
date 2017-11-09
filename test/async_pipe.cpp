@@ -94,7 +94,7 @@ namespace
 {
 struct named_pipe_test_fixture
 {
-    static const bfs::tmp_path;
+    static const bfs::path tmp_path;
 
     asio::io_context ioc;
 
