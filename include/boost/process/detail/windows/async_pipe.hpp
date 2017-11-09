@@ -44,12 +44,14 @@ public:
     typedef ::boost::asio::windows::stream_handle   handle_type;
 
     inline async_pipe(boost::asio::io_context & ios,
-                      const std::string & name = make_pipe_name())
-                    : async_pipe(ios, ios, name) {}
+                      const std::string & name = make_pipe_name(),
+                      const bool open_existing = false)
+                    : async_pipe(ios, ios, name, open_existing) {}
 
     inline async_pipe(boost::asio::io_context & ios_source,
                       boost::asio::io_context & ios_sink,
-                      const std::string & name = make_pipe_name());
+                      const std::string & name = make_pipe_name(),
+                      const bool open_existing = false);
 
     inline async_pipe(const async_pipe& rhs);
     async_pipe(async_pipe&& rhs)  : _source(std::move(rhs._source)), _sink(std::move(rhs._sink))
@@ -260,19 +262,34 @@ async_pipe::async_pipe(const async_pipe& p)  :
 
 async_pipe::async_pipe(boost::asio::io_context & ios_source,
                        boost::asio::io_context & ios_sink,
-                       const std::string & name) : _source(ios_source), _sink(ios_sink)
+                       const std::string & name,
+                       const bool open_existing) : _source(ios_source), _sink(ios_sink)
 {
     static constexpr int FILE_FLAG_OVERLAPPED_  = 0x40000000; //temporary
 
-    ::boost::winapi::HANDLE_ source = ::boost::winapi::create_named_pipe(
-            name.c_str(),
-            ::boost::winapi::PIPE_ACCESS_INBOUND_
-            | FILE_FLAG_OVERLAPPED_, //write flag
-            0, 1, 8192, 8192, 0, nullptr);
-
+    ::boost::winapi::HANDLE_ source = boost::winapi::INVALID_HANDLE_VALUE_;
+    if (open_existing)
+    {
+        source = ::boost::winapi::create_file(
+                name.c_str(),
+                ::boost::winapi::GENERIC_READ_, 0, nullptr,
+                ::boost::winapi::OPEN_EXISTING_,
+                FILE_FLAG_OVERLAPPED_,
+                nullptr);
+    }
+    else
+    {
+        source = ::boost::winapi::create_named_pipe(
+                name.c_str(),
+                ::boost::winapi::PIPE_ACCESS_INBOUND_
+                | FILE_FLAG_OVERLAPPED_, //write flag
+                0, 1, 8192, 8192, 0, nullptr);
+    }
 
     if (source == boost::winapi::INVALID_HANDLE_VALUE_)
-        ::boost::process::detail::throw_last_error("create_named_pipe(" + name + ") failed");
+        ::boost::process::detail::throw_last_error(
+            std::string("create_") + (open_existing ? "file" : "named_pipe")
+            + "(" + name + ") failed");
 
     _source.assign(source);
 

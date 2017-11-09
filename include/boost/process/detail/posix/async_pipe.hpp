@@ -35,11 +35,13 @@ public:
         _source.assign(fds[0]);
         _sink  .assign(fds[1]);
     };
-    inline async_pipe(boost::asio::io_context & ios, const std::string & name)
-        : async_pipe(ios, ios, name) {}
+    inline async_pipe(boost::asio::io_context & ios, const std::string & name,
+                      const bool open_existing = false)
+        : async_pipe(ios, ios, name, open_existing) {}
 
     inline async_pipe(boost::asio::io_context & ios_source,
-                      boost::asio::io_context & io_sink, const std::string & name);
+                      boost::asio::io_context & io_sink, const std::string & name,
+                      const bool open_existing = false);
     inline async_pipe(const async_pipe& lhs);
     async_pipe(async_pipe&& lhs)  : _source(std::move(lhs._source)), _sink(std::move(lhs._sink))
     {
@@ -183,13 +185,15 @@ public:
 
 async_pipe::async_pipe(boost::asio::io_context & ios_source,
                        boost::asio::io_context & ios_sink,
-                       const std::string & name) : _source(ios_source), _sink(ios_sink)
+                       const std::string & name,
+                       const bool open_existing) : _source(ios_source), _sink(ios_sink)
 {
-    auto fifo = mkfifo(name.c_str(), 0666 );
-
-    if (fifo != 0)
-        boost::process::detail::throw_last_error("mkfifo() failed");
-
+    if (!open_existing)
+    {
+        auto fifo = mkfifo(name.c_str(), 0666 );
+        if (fifo != 0)
+            boost::process::detail::throw_last_error("mkfifo() failed");
+    }
 
     int  read_fd = open(name.c_str(), O_RDWR);
 

@@ -64,7 +64,8 @@ public:
      *
      * @note Windows restricts possible names.
      */
-    inline async_pipe(boost::asio::io_context & ios, const std::string & name);
+    inline async_pipe(boost::asio::io_context & ios, const std::string & name,
+                      const bool open_existing = false);
 
 
     /** Construct a new async_pipe, does automatically open.
@@ -72,7 +73,8 @@ public:
      * @note Windows restricts possible names.
      */
     inline async_pipe(boost::asio::io_context & ios_source,
-                      boost::asio::io_context & ios_sink, const std::string & name);
+                      boost::asio::io_context & ios_sink, const std::string & name,
+                      const bool open_existing = false);
 
     /** Copy-Constructor of the async pipe.
      * @note Windows requires a named pipe for this, if a the wrong type is used an exception is thrown.
