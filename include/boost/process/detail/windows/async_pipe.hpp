@@ -263,33 +263,21 @@ async_pipe::async_pipe(const async_pipe& p)  :
 async_pipe::async_pipe(boost::asio::io_context & ios_source,
                        boost::asio::io_context & ios_sink,
                        const std::string & name,
-                       const bool open_existing) : _source(ios_source), _sink(ios_sink)
+                       const bool /*open_existing*/) : _source(ios_source), _sink(ios_sink)
 {
     static constexpr int FILE_FLAG_OVERLAPPED_  = 0x40000000; //temporary
 
-    ::boost::winapi::HANDLE_ source = boost::winapi::INVALID_HANDLE_VALUE_;
-    if (open_existing)
-    {
-        source = ::boost::winapi::create_file(
-                name.c_str(),
-                ::boost::winapi::GENERIC_READ_, 0, nullptr,
-                ::boost::winapi::OPEN_EXISTING_,
-                FILE_FLAG_OVERLAPPED_,
-                nullptr);
-    }
-    else
-    {
-        source = ::boost::winapi::create_named_pipe(
-                name.c_str(),
-                ::boost::winapi::PIPE_ACCESS_INBOUND_
-                | FILE_FLAG_OVERLAPPED_, //write flag
-                0, 1, 8192, 8192, 0, nullptr);
-    }
+    ::boost::winapi::HANDLE_ source = ::boost::winapi::create_named_pipe(
+            name.c_str(),
+            ::boost::winapi::PIPE_ACCESS_INBOUND_ | FILE_FLAG_OVERLAPPED_, //write flag
+            0,
+            ::boost::winapi::PIPE_UNLIMITED_INSTANCES_,
+            8192, 8192, 0, nullptr);
+
 
     if (source == boost::winapi::INVALID_HANDLE_VALUE_)
         ::boost::process::detail::throw_last_error(
-            std::string("create_") + (open_existing ? "file" : "named_pipe")
-            + "(" + name + ") failed");
+            std::string("create_named_pipe") + "(" + name + ") failed");
 
     _source.assign(source);
 
@@ -301,7 +289,8 @@ async_pipe::async_pipe(boost::asio::io_context & ios_source,
             nullptr);
 
     if (sink == ::boost::winapi::INVALID_HANDLE_VALUE_)
-        ::boost::process::detail::throw_last_error("create_file() failed");
+        ::boost::process::detail::throw_last_error(
+            std::string("create_file") + "(" + name + ") failed");
 
     _sink.assign(sink);
 }
