@@ -20,6 +20,7 @@
 #include <boost/config.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/process.hpp>
 #include <boost/process/async_pipe.hpp>
 #include <boost/process/pipe.hpp>
 #include <boost/test/included/unit_test.hpp>
@@ -92,6 +93,11 @@ BOOST_AUTO_TEST_CASE(multithreaded_async_pipe)
         t.join();
 }
 
+#define log_stmt(stmt) \
+    BOOST_TEST_MESSAGE(__LINE__ << ": " << #stmt); \
+    stmt; \
+    BOOST_TEST_MESSAGE(__LINE__ << ": done")
+
 namespace
 {
 struct named_pipe_test_fixture
@@ -158,11 +164,7 @@ struct named_pipe_test_fixture
         BOOST_CHECK(!bfs::exists(pipe_path));
     }
 
-    #define log_stmt(stmt) { \
-            BOOST_TEST_MESSAGE(__LINE__ << ": " << #stmt); \
-            stmt; \
-            BOOST_TEST_MESSAGE(__LINE__ << ": done"); \
-        }
+
 
     static
     void test_plain_async(asio::io_context& ioc,
@@ -184,7 +186,6 @@ struct named_pipe_test_fixture
         log_stmt(ioc.run());
     }
 
-    #undef log_stmt
 };
 
 }
@@ -201,19 +202,102 @@ BOOST_AUTO_TEST_CASE(existing_named_pipe_plain_async_opened_pipe, *boost::unit_t
     test_plain_async(ioc, opened_pipe, opened_pipe, st, buf, delim);
 }
 
-// hangs indefinitely on windows
-#if !defined(BOOST_WINDOWS_API)
-
-BOOST_AUTO_TEST_CASE(existing_named_pipe_plain_async_created_to_opened_pipe, *boost::unit_test::timeout(5))
-{
-    test_plain_async(ioc, created_pipe, opened_pipe, st, buf, delim);
-}
-
-BOOST_AUTO_TEST_CASE(existing_named_pipe_plain_async_opened_to_created_pipe, *boost::unit_test::timeout(5))
-{
-    test_plain_async(ioc, opened_pipe, created_pipe, st, buf, delim);
-}
-
-#endif
-
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(existing_named_pipe_send_receive_child_process, *boost::unit_test::timeout(5))
+{
+    namespace bp = boost::process;
+    using std::string;
+
+    asio::io_context ioc;
+    // generate a unique random path/name for for the pipe
+    boost::uuids::random_generator uuidGenerator{};
+    const bfs::path pipe_path_base =
+        #if defined(BOOST_POSIX_API)
+            bfs::temp_directory_path();
+        #elif defined(BOOST_WINDOWS_API)
+            bfs::path("\\\\.\\pipe");
+        #endif
+    const string pipe_name_base = (pipe_path_base / boost::uuids::to_string(uuidGenerator())).string();
+    const char delim     = '\n';
+
+    const string st_base = "test-string";
+    const string st      = st_base + delim;
+
+    asio::streambuf buf{};
+
+    // create and open the pipe "file"
+    const string out_pipe_name = pipe_name_base + "-1";
+    bp::async_pipe out_pipe(ioc, out_pipe_name);
+    BOOST_CHECK(out_pipe.is_open());
+
+    // open the existing pipe
+    const string in_pipe_name = pipe_name_base + "-0";
+    bp::async_pipe in_pipe(ioc, in_pipe_name);
+    BOOST_CHECK(in_pipe.is_open());
+
+    BOOST_TEST_MESSAGE("        out_pipe_name [" << out_pipe_name << "]");
+    BOOST_TEST_MESSAGE("        in_pipe_name  [" << in_pipe_name << "]");
+
+    const string child_path = (
+        boost::filesystem::system_complete(
+            boost::unit_test::framework::master_test_suite().argv[0]
+        ).remove_filename() /
+        #if defined(BOOST_POSIX_API)
+            "echo_named_pipe"
+        #elif defined(BOOST_WINDOWS_API)
+            "echo_named_pipe.exe"
+        #endif
+    ).string();
+    BOOST_TEST_MESSAGE("        starting child [" << child_path << "]");
+    log_stmt(
+        bp::child c(
+            bp::exe=child_path,
+            bp::args={
+                "--input", out_pipe_name,
+                "--output", in_pipe_name
+            },
+            bp::std_out > stdout,
+            bp::std_err > stderr
+        )
+    );
+
+
+
+    log_stmt(
+        asio::async_write(out_pipe, asio::buffer(st), [&](const boost::system::error_code &, std::size_t){
+            BOOST_TEST_MESSAGE("        in async_write");
+        });
+    );
+    log_stmt(
+        asio::async_read_until(in_pipe, buf, delim, [&](const boost::system::error_code &, std::size_t){
+            BOOST_TEST_MESSAGE("        in async_read_until");
+        });
+    );
+
+
+    log_stmt(ioc.run());
+
+    log_stmt(c.wait());
+
+
+
+
+    string line;
+    std::istream istr(&buf);
+    BOOST_CHECK(std::getline(istr, line));
+
+    BOOST_CHECK_EQUAL(line, st_base);
+
+    // close pipes
+    out_pipe.close();
+    BOOST_CHECK(!out_pipe.is_open());
+    in_pipe.close();
+    BOOST_CHECK(!in_pipe.is_open());
+    // cleanup
+    bfs::remove(in_pipe_name);
+    BOOST_CHECK(!bfs::exists(in_pipe_name));
+    bfs::remove(out_pipe_name);
+    BOOST_CHECK(!bfs::exists(out_pipe_name));
+}
+

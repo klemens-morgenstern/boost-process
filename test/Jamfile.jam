@@ -47,9 +47,11 @@ exe sparring_partner : sparring_partner.cpp program_options system filesystem io
 
 exe sub_launch : sub_launcher.cpp program_options iostreams system filesystem : <warnings>off <target-os>windows:<source>shell32 ;
 
+exe echo_named_pipe : echo_named_pipe.cpp program_options system filesystem iostreams : : ;
+
 test-suite bare :
     [ run environment.cpp system filesystem  ]
-    [ run async_pipe.cpp system filesystem ]
+    [ run async_pipe.cpp system filesystem : : echo_named_pipe  ]
     [ run pipe.cpp        system filesystem  ]
     ;
 
