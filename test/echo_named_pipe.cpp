@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
 
     const char delim = '\n';
     boost::asio::streambuf in_buf;
+    string out_buf;
     asio::async_read_until(input_pipe, in_buf, delim, [&](const boost::system::error_code &, std::size_t){
 
-        string out_buf;
         std::istream istr(&in_buf);
         std::getline(istr, out_buf, delim);
         out_buf += delim;
