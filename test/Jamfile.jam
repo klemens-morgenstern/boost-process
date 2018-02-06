@@ -22,6 +22,7 @@ project : requirements
   <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
   <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
   <target-os>windows:<define>WIN32_LEAN_AND_MEAN
+  <target-os>windows:<library>Advapi32
   <target-os>linux:<linkflags>-lpthread
   <os>NT,<toolset>cw:<library>ws2_32
   <os>NT,<toolset>gcc:<library>ws2_32
@@ -51,7 +52,7 @@ exe echo_named_pipe : echo_named_pipe.cpp program_options system filesystem iost
 
 test-suite bare :
     [ run environment.cpp system filesystem  ]
-    [ run async_pipe.cpp system filesystem : : echo_named_pipe  ]
+    [ run async_pipe.cpp system filesystem : : echo_named_pipe ]
     [ run pipe.cpp        system filesystem  ]
     [ compile no_ansi_apps.cpp ]
     [ compile-fail spawn_fail.cpp        ]
