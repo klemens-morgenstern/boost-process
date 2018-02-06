@@ -17,6 +17,11 @@ namespace boost { namespace process { namespace detail { namespace posix {
 constexpr int still_active = 0x7F;
 static_assert(!WIFEXITED(still_active), "Internal Error");
 
+inline bool is_running(int code)
+{
+    return !WIFEXITED(code) && !WIFSIGNALED(code);
+}
+
 inline bool is_running(const child_handle &p, int & exit_code)
 {
     int status; 
@@ -33,7 +38,7 @@ inline bool is_running(const child_handle &p, int & exit_code)
         return true;
     else //exited
     {
-        if (WIFEXITED(status))
+        if (!is_running(status))
             exit_code = status;
         return false;
     }
@@ -56,21 +61,31 @@ inline bool is_running(const child_handle &p, int & exit_code, std::error_code &
     {
         ec.clear();
         
-        if (WIFEXITED(status))
+        if (!is_running(status))
             exit_code = status;
         
         return false;
     }
 }
 
-inline bool is_running(int code)
-{
-    return !WIFEXITED(code);
-}
-
 inline int eval_exit_status(int code)
 {
-    return WEXITSTATUS(code);
+    if (WIFEXITED(code))
+    {
+        return WEXITSTATUS(code);
+    }
+    else if (WIFSIGNALED(code))
+    {
+        return WTERMSIG(code);
+    }
+    else if (WIFSTOPPED(code))
+    {
+        return WSTOPSIG(code);
+    }
+    else
+    {
+        return code;
+    }
 }
 
 }}}}
