@@ -52,7 +52,7 @@ exe echo_named_pipe : echo_named_pipe.cpp program_options system filesystem iost
 
 test-suite bare :
     [ run environment.cpp system filesystem  ]
-    [ run async_pipe.cpp system filesystem : : echo_named_pipe ]
+    [ run async_pipe.cpp  system filesystem  ]
     [ run pipe.cpp        system filesystem  ]
     [ compile no_ansi_apps.cpp ]
     [ compile-fail spawn_fail.cpp        ]
