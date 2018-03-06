@@ -21,6 +21,38 @@
 
 namespace boost { namespace process { namespace detail { namespace posix {
 
+inline int pipe_cloexec(int pipefd[2])
+{
+    int result;
+#if BOOST_PROCESS_HAS_PIPE2
+    result = ::pipe2(pipefd, O_CLOEXEC);
+    if (result != -1 || errno != ENOSYS) {
+        return result;
+    }
+#endif
+    result = ::pipe(pipefd);
+    if (result != -1) {
+        ::fcntl(pipefd[0], F_SETFD, FD_CLOEXEC);
+        ::fcntl(pipefd[1], F_SETFD, FD_CLOEXEC);
+    }
+    return result;
+}
+
+inline int dup_cloexec(int fd)
+{
+    int result;
+#ifdef F_DUPFD_CLOEXEC
+    result = ::fcntl(fd, F_DUPFD_CLOEXEC, 0);
+    if (result != -1 || errno != EINVAL) {
+        return result;
+    }
+#endif
+    result = ::dup(fd);
+    if (result != -1) {
+        ::fcntl(result, F_SETFD, FD_CLOEXEC);
+    }
+    return result;
+}
 
 template<class CharT, class Traits = std::char_traits<CharT>>
 class basic_pipe
@@ -40,7 +72,7 @@ public:
     basic_pipe()
     {
         int fds[2];
-        if (::pipe(fds) == -1)
+        if (pipe_cloexec(fds) == -1)
             boost::process::detail::throw_last_error("pipe(2) failed");
 
         _source = fds[0];
@@ -119,13 +151,13 @@ basic_pipe<CharT, Traits>::basic_pipe(const basic_pipe & rhs)
 {
        if (rhs._source != -1)
        {
-           _source = ::dup(rhs._source);
+           _source = dup_cloexec(rhs._source);
            if (_source == -1)
                ::boost::process::detail::throw_last_error("dup() failed");
        }
     if (rhs._sink != -1)
     {
-        _sink = ::dup(rhs._sink);
+        _sink = dup_cloexec(rhs._sink);
         if (_sink == -1)
             ::boost::process::detail::throw_last_error("dup() failed");
 
@@ -137,13 +169,13 @@ basic_pipe<CharT, Traits> &basic_pipe<CharT, Traits>::operator=(const basic_pipe
 {
        if (rhs._source != -1)
        {
-           _source = ::dup(rhs._source);
+           _source = dup_cloexec(rhs._source);
            if (_source == -1)
                ::boost::process::detail::throw_last_error("dup() failed");
        }
     if (rhs._sink != -1)
     {
-        _sink = ::dup(rhs._sink);
+        _sink = dup_cloexec(rhs._sink);
         if (_sink == -1)
             ::boost::process::detail::throw_last_error("dup() failed");
 

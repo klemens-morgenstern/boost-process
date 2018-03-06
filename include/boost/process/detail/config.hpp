@@ -18,6 +18,7 @@
 #define BOOST_PROCESS_DETAIL_CONFIG_HPP
 
 #include <boost/config.hpp>
+#include <boost/predef.h>
 #include <system_error>
 #include <boost/system/api_config.hpp>
 
@@ -55,6 +56,14 @@ inline std::error_code get_last_error() noexcept
 //copied from linux spec.
 #if (_XOPEN_SOURCE >= 500 || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) && !(_POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700)
 #define BOOST_POSIX_HAS_VFORK 1
+#endif
+
+#if BOOST_LIB_C_GNU >= BOOST_VERSION_NUMBER(2,9,0)
+#if defined(_GNU_SOURCE)
+#define BOOST_PROCESS_HAS_PIPE2 1
+#endif
+#elif BOOST_OS_BSD_FREE >= BOOST_VERSION_NUMBER(10,0,0) || BOOST_OS_BSD_NET >= BOOST_VERSION_NUMBER(6,0,0) || BOOST_OS_BSD_OPEN >= BOOST_VERSION_NUMBER(5,7,0)
+#define BOOST_PROCESS_HAS_PIPE2 1
 #endif
 
 #elif defined(BOOST_WINDOWS_API)
