@@ -232,7 +232,7 @@ async_pipe::async_pipe(const async_pipe & p) :
     }
 }
 
-async_pipe& async_pipe::operator=(const async_pipe & p)
+async_pipe& async_pipe::operator=(const async_pipe &)
 {
     int source;
     int sink;
