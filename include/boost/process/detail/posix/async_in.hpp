@@ -82,7 +82,7 @@ struct async_in_buffer : ::boost::process::detail::posix::handler_base_ext,
     template <typename Executor>
     void on_exec_setup(Executor &exec)
     {
-        if (::dup2(pipe->native_source(), STDIN_FILENO) == -1)
+        if (safe_dup2(pipe->native_source(), STDIN_FILENO) == -1)
             exec.set_error(::boost::process::detail::get_last_error(), "dup2() failed");
 
         if (pipe->native_source() != STDIN_FILENO)

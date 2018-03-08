@@ -54,6 +54,23 @@ inline int dup_cloexec(int fd)
     return result;
 }
 
+// Like dup2(2), but if the descriptors are the same, just remove any CLOEXEC flag
+inline int safe_dup2(int oldfd, int newfd)
+{
+    if (oldfd == newfd) {
+        // clear any FD_CLOEXEC flag that might be set
+        int flags = ::fcntl(oldfd, F_GETFD, 0);
+        if (flags == -1)
+            return -1;
+        flags &= ~FD_CLOEXEC;
+        if (::fcntl(STDIN_FILENO, F_SETFD, flags) == -1)
+            return -1;
+        return newfd;
+    } else {
+        return ::dup2(oldfd, newfd);
+    }
+}
+
 template<class CharT, class Traits = std::char_traits<CharT>>
 class basic_pipe
 {

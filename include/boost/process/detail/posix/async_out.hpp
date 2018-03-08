@@ -22,22 +22,21 @@
 
 namespace boost { namespace process { namespace detail { namespace posix {
 
-
 inline int apply_out_handles(int handle, std::integral_constant<int, 1>, std::integral_constant<int, -1>)
 {
-    return ::dup2(handle, STDOUT_FILENO);
+    return safe_dup2(handle, STDOUT_FILENO);
 }
 
 inline int apply_out_handles(int handle, std::integral_constant<int, 2>, std::integral_constant<int, -1>)
 {
-    return ::dup2(handle, STDERR_FILENO);
+    return safe_dup2(handle, STDERR_FILENO);
 }
 
 inline int apply_out_handles(int handle, std::integral_constant<int, 1>, std::integral_constant<int, 2>)
 {
-    if (::dup2(handle, STDOUT_FILENO) == -1)
+    if (safe_dup2(handle, STDOUT_FILENO) == -1)
         return -1;
-    if (::dup2(handle, STDERR_FILENO) == -1)
+    if (safe_dup2(handle, STDERR_FILENO) == -1)
         return -1;
 
     return 0;
