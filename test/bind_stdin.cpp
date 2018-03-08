@@ -255,3 +255,52 @@ BOOST_AUTO_TEST_CASE(file_io_C, *boost::unit_test::timeout(2))
     c.wait();
     boost::filesystem::remove(pth);
 }
+
+BOOST_AUTO_TEST_CASE(handle_inheritance_singlethreaded, *boost::unit_test::timeout(5)) {
+    using boost::unit_test::framework::master_test_suite;
+
+    boost::process::pipe p1;
+    boost::process::pipe p2;
+    boost::process::child c1(
+        master_test_suite().argv[1], "--stdin-to-stdout",
+        boost::process::std_in < p1);
+    boost::process::child c2(
+        master_test_suite().argv[1], "--stdin-to-stdout",
+        boost::process::std_in < p2);
+
+    p1.close();
+    p2.close();
+
+    c1.wait(); // blocks until the input is properly closed
+    c2.wait(); // blocks until the input is properly closed
+}
+
+static void run_cat() {
+    using boost::unit_test::framework::master_test_suite;
+
+    boost::process::pipe p;
+    boost::process::child c(
+        master_test_suite().argv[1], "--stdin-to-stdout",
+        boost::process::std_in < p);
+
+    p.close();
+
+    c.wait(); // blocks until the input is properly closed
+}
+
+BOOST_AUTO_TEST_CASE(handle_inheritance_multithreaded, *boost::unit_test::timeout(20)) {
+    int nThreads = 1000;
+
+    std::vector<std::thread> threads;
+    threads.reserve(nThreads);
+
+    for (int i = 0; i < nThreads; ++i) {
+        threads.emplace_back(run_cat);
+    }
+
+    for (int i = 0; i < nThreads; ++i) {
+        if (threads[i].joinable()) {
+            threads[i].join();
+        }
+    }
+}
