@@ -256,51 +256,65 @@ BOOST_AUTO_TEST_CASE(file_io_C, *boost::unit_test::timeout(2))
     boost::filesystem::remove(pth);
 }
 
-BOOST_AUTO_TEST_CASE(handle_inheritance_singlethreaded, *boost::unit_test::timeout(5)) {
+BOOST_AUTO_TEST_CASE(handle_inheritance, *boost::unit_test::timeout(5)) {
+    std::cout << "handle_inheritance" << std::endl;
     using boost::unit_test::framework::master_test_suite;
 
+    // Check that the processes don't inherit the write end of each other's pipes.
+    // If they do, they will not terminate when we close our handle on the input pipes below,
+    // as other children will still hold the pipe open.
     boost::process::pipe p1;
     boost::process::pipe p2;
+    boost::process::pipe p3;
     boost::process::child c1(
         master_test_suite().argv[1], "--stdin-to-stdout",
         boost::process::std_in < p1);
     boost::process::child c2(
         master_test_suite().argv[1], "--stdin-to-stdout",
         boost::process::std_in < p2);
+    boost::process::child c3(
+        master_test_suite().argv[1], "--stdin-to-stdout",
+        boost::process::std_in < p3);
+
+    p2.close();
+    c2.wait(); // blocks until the input is properly closed
 
     p1.close();
-    p2.close();
-
     c1.wait(); // blocks until the input is properly closed
-    c2.wait(); // blocks until the input is properly closed
+
+    p3.close();
+    c3.wait(); // blocks until the input is properly closed
 }
 
-static void run_cat() {
+BOOST_AUTO_TEST_CASE(handle_inheritance_with_copies, *boost::unit_test::timeout(5)) {
+    std::cout << "handle_inheritance_with_copies" << std::endl;
     using boost::unit_test::framework::master_test_suite;
 
-    boost::process::pipe p;
-    boost::process::child c(
+    boost::process::pipe p1a;
+    boost::process::pipe p1 = p1a;
+    p1a.close();
+    boost::process::pipe p2a;
+    boost::process::pipe p2 = p2a;
+    p2a.close();
+    boost::process::pipe p3a;
+    boost::process::pipe p3 = p3a;
+    p3a.close();
+    boost::process::child c1(
         master_test_suite().argv[1], "--stdin-to-stdout",
-        boost::process::std_in < p);
+        boost::process::std_in < p1);
+    boost::process::child c2(
+        master_test_suite().argv[1], "--stdin-to-stdout",
+        boost::process::std_in < p2);
+    boost::process::child c3(
+        master_test_suite().argv[1], "--stdin-to-stdout",
+        boost::process::std_in < p3);
 
-    p.close();
+    p2.close();
+    c2.wait(); // blocks until the input is properly closed
 
-    c.wait(); // blocks until the input is properly closed
-}
+    p1.close();
+    c1.wait(); // blocks until the input is properly closed
 
-BOOST_AUTO_TEST_CASE(handle_inheritance_multithreaded, *boost::unit_test::timeout(20)) {
-    int nThreads = 1000;
-
-    std::vector<std::thread> threads;
-    threads.reserve(nThreads);
-
-    for (int i = 0; i < nThreads; ++i) {
-        threads.emplace_back(run_cat);
-    }
-
-    for (int i = 0; i < nThreads; ++i) {
-        if (threads[i].joinable()) {
-            threads[i].join();
-        }
-    }
+    p3.close();
+    c3.wait(); // blocks until the input is properly closed
 }
