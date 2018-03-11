@@ -122,7 +122,7 @@ basic_pipe<Char, Traits>::basic_pipe(const basic_pipe & p)
         _source = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, p._source, proc, &_source, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
@@ -130,7 +130,7 @@ basic_pipe<Char, Traits>::basic_pipe(const basic_pipe & p)
         _sink = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, p._sink, proc, &_sink, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
@@ -175,7 +175,7 @@ basic_pipe<Char, Traits>& basic_pipe<Char, Traits>::operator=(const basic_pipe &
         _source = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, p._source, proc, &_source, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
@@ -183,7 +183,7 @@ basic_pipe<Char, Traits>& basic_pipe<Char, Traits>::operator=(const basic_pipe &
         _sink = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, p._sink, proc, &_sink, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 

@@ -198,7 +198,7 @@ public:
             source = ::boost::winapi::INVALID_HANDLE_VALUE_;
         else if (!::boost::winapi::DuplicateHandle(
                 proc, source_in, proc, &source, 0,
-                static_cast<::boost::winapi::BOOL_>(true),
+                static_cast<::boost::winapi::BOOL_>(false),
                  ::boost::winapi::DUPLICATE_SAME_ACCESS_))
             throw_last_error("Duplicate Pipe Failed");
 
@@ -214,7 +214,7 @@ public:
             sink = ::boost::winapi::INVALID_HANDLE_VALUE_;
         else if (!::boost::winapi::DuplicateHandle(
                 proc, sink_in, proc, &sink, 0,
-                static_cast<::boost::winapi::BOOL_>(true),
+                static_cast<::boost::winapi::BOOL_>(false),
                  ::boost::winapi::DUPLICATE_SAME_ACCESS_))
             throw_last_error("Duplicate Pipe Failed");
 
@@ -241,7 +241,7 @@ async_pipe::async_pipe(const async_pipe& p)  :
         source = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, source_in, proc, &source, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
@@ -249,7 +249,7 @@ async_pipe::async_pipe(const async_pipe& p)  :
         sink = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, sink_in, proc, &sink, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
@@ -312,7 +312,7 @@ async_pipe& async_pipe::operator=(const async_pipe & p)
         source = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, source_in.native_handle(), proc, &source, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
@@ -320,7 +320,7 @@ async_pipe& async_pipe::operator=(const async_pipe & p)
         sink = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, sink_in.native_handle(), proc, &sink, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
@@ -362,7 +362,7 @@ async_pipe::operator basic_pipe<CharT, Traits>() const
         source = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, source_in, proc, &source, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
@@ -370,7 +370,7 @@ async_pipe::operator basic_pipe<CharT, Traits>() const
         sink = ::boost::winapi::INVALID_HANDLE_VALUE_;
     else if (!::boost::winapi::DuplicateHandle(
             proc, sink_in, proc, &sink, 0,
-            static_cast<::boost::winapi::BOOL_>(true),
+            static_cast<::boost::winapi::BOOL_>(false),
              ::boost::winapi::DUPLICATE_SAME_ACCESS_))
         throw_last_error("Duplicate Pipe Failed");
 
