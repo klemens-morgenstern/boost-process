@@ -87,12 +87,6 @@ struct io_context_ref : boost::process::detail::handler_base
                       typename std::remove_reference< boost::mpl::_ > ::type
                       >>(exec.seq);
 
-        //ok, check if there are actually any.
-        if (boost::fusion::empty(asyncs))
-        {
-            return;
-        }
-
         ::boost::winapi::PROCESS_INFORMATION_ & proc = exec.proc_info;
         auto this_proc = ::boost::winapi::GetCurrentProcess();
 

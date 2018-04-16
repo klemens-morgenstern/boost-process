@@ -125,3 +125,26 @@ BOOST_AUTO_TEST_CASE(async_wait)
     io_context.run();
     std::cout << "async_wait 2" << std::endl;
 }
+
+BOOST_AUTO_TEST_CASE(async_nowait)
+{
+    // No need to call wait when passing an io_context
+    using boost::unit_test::framework::master_test_suite;
+    using namespace boost::asio;
+
+    std::error_code ec;
+    boost::asio::io_context io_context;
+    bp::child c(
+        master_test_suite().argv[1],
+        "test", "--exit-code", "123",
+        ec,
+        io_context
+    );
+    BOOST_REQUIRE(!ec);
+
+    std::cout << "async_nowait 1" << std::endl;
+    io_context.run();
+    std::cout << "async_nowait 2" << std::endl;
+
+    BOOST_CHECK_EQUAL(123, c.exit_code());
+}
