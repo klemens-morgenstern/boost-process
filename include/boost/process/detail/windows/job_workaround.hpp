@@ -82,7 +82,7 @@ typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION_ {
   _Out_opt_ LPDWORD            lpReturnLength
 );
  */
-typedef ::boost::winapi::BOOL_  (*query_information_job_object_p)(
+typedef ::boost::winapi::BOOL_  (WINAPI *query_information_job_object_p)(
         ::boost::winapi::HANDLE_,
         JOBOBJECTINFOCLASS_,
         void *,
@@ -110,7 +110,7 @@ inline ::boost::winapi::BOOL_ query_information_job_object(
   _In_ DWORD              cbJobObjectInfoLength
 );*/
 
-typedef ::boost::winapi::BOOL_  (*set_information_job_object_p)(
+typedef ::boost::winapi::BOOL_  (WINAPI *set_information_job_object_p)(
         ::boost::winapi::HANDLE_,
         JOBOBJECTINFOCLASS_,
         void *,
