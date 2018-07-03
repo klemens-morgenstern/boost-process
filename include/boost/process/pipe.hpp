@@ -265,31 +265,40 @@ public:
     basic_pipebuf<CharT, Traits>* rdbuf() {return &_buf;};
 
     ///Default constructor.
-    basic_ipstream() : std::basic_istream<CharT, Traits>(nullptr)
+    basic_ipstream() : std::basic_istream<CharT, Traits>(&_buf)
     {
-        std::basic_istream<CharT, Traits>::rdbuf(&_buf);
-    };
+    }
     ///Copy constructor.
     basic_ipstream(const basic_ipstream & ) = delete;
     ///Move constructor.
-    basic_ipstream(basic_ipstream && ) = default;
+	basic_ipstream(basic_ipstream && rhs) : basic_ipstream()
+	{
+		std::basic_istream<CharT, Traits>::swap(rhs);
+		_buf = std::move(rhs._buf);
+	}
 
     ///Move construct from a pipe.
-    basic_ipstream(pipe_type && p)      : std::basic_istream<CharT, Traits>(nullptr), _buf(std::move(p))
+    basic_ipstream(pipe_type && p)      : basic_ipstream(), _buf(std::move(p))
     {
-        std::basic_istream<CharT, Traits>::rdbuf(&_buf);
     }
 
     ///Copy construct from a pipe.
-    basic_ipstream(const pipe_type & p) : std::basic_istream<CharT, Traits>(nullptr), _buf(p)
+    basic_ipstream(const pipe_type & p) : basic_ipstream(), _buf(p)
     {
-        std::basic_istream<CharT, Traits>::rdbuf(&_buf);
     }
 
     ///Copy assignment.
     basic_ipstream& operator=(const basic_ipstream & ) = delete;
     ///Move assignment
-    basic_ipstream& operator=(basic_ipstream && ) = default;
+	basic_ipstream& operator=(basic_ipstream && rhs)
+	{
+		if (this != std::addressof(rhs))
+		{
+			std::basic_istream<CharT, Traits>::swap(rhs);
+			_buf = std::move(rhs._buf);
+		}
+		return *this;
+	}
     ///Move assignment of a pipe.
     basic_ipstream& operator=(pipe_type && p)
     {
@@ -341,29 +350,38 @@ public:
     basic_pipebuf<CharT, Traits>* rdbuf() const {return _buf;};
 
     ///Default constructor.
-    basic_opstream() : std::basic_ostream<CharT, Traits>(nullptr)
+    basic_opstream() : std::basic_ostream<CharT, Traits>(&_buf)
     {
-        std::basic_ostream<CharT, Traits>::rdbuf(&_buf);
-    };
+    }
     ///Copy constructor.
     basic_opstream(const basic_opstream & ) = delete;
     ///Move constructor.
-    basic_opstream(basic_opstream && ) = default;
+	basic_opstream(basic_opstream && rhs) : basic_opstream()
+	{
+		std::basic_ostream<CharT, Traits>::swap(rhs);
+		_buf = std::move(rhs._buf);
+	}
 
     ///Move construct from a pipe.
-    basic_opstream(pipe_type && p)      : std::basic_ostream<CharT, Traits>(nullptr), _buf(std::move(p))
+    basic_opstream(pipe_type && p)      : basic_ipstream(), _buf(std::move(p))
     {
-        std::basic_ostream<CharT, Traits>::rdbuf(&_buf);
-    };
+    }
     ///Copy construct from a pipe.
-    basic_opstream(const pipe_type & p) : std::basic_ostream<CharT, Traits>(nullptr), _buf(p)
+    basic_opstream(const pipe_type & p) : basic_ipstream(), _buf(p)
     {
-        std::basic_ostream<CharT, Traits>::rdbuf(&_buf);
-    };
+    }
     ///Copy assignment.
     basic_opstream& operator=(const basic_opstream & ) = delete;
     ///Move assignment
-    basic_opstream& operator=(basic_opstream && ) = default;
+	basic_opstream& operator=(basic_opstream && rhs)
+	{
+		if (this != std::addressof(rhs))
+		{
+			std::basic_ostream<CharT, Traits>::swap(rhs);
+			_buf = std::move(rhs._buf);
+		}
+		return *this;
+	}
     ///Move assignment of a pipe.
     basic_opstream& operator=(pipe_type && p)
     {
