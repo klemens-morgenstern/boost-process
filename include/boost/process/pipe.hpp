@@ -241,87 +241,94 @@ private:
 typedef basic_pipebuf<char>     pipebuf;
 typedef basic_pipebuf<wchar_t> wpipebuf;
 
-/** Implementation of a reading pipe stream.
- *
- */
+/** Implementation of a generic pipe stream.
+*
+*/
 template<
-    class CharT,
-    class Traits = std::char_traits<CharT>
+	template<typename, typename>class StreamT,
+	class CharT,
+	class Traits = std::char_traits<CharT>
 >
-class basic_ipstream : public std::basic_istream<CharT, Traits>
+class basic_stream : public StreamT<CharT, Traits>
 {
-    basic_pipebuf<CharT, Traits> _buf;
+	basic_pipebuf<CharT, Traits> _buf;
 public:
+	typedef basic_pipe<CharT, Traits> pipe_type;
 
-    typedef basic_pipe<CharT, Traits> pipe_type;
+	typedef           CharT            char_type;
+	typedef           Traits           traits_type;
+	typedef  typename Traits::int_type int_type;
+	typedef  typename Traits::pos_type pos_type;
+	typedef  typename Traits::off_type off_type;
 
-    typedef           CharT            char_type  ;
-    typedef           Traits           traits_type;
-    typedef  typename Traits::int_type int_type   ;
-    typedef  typename Traits::pos_type pos_type   ;
-    typedef  typename Traits::off_type off_type   ;
 
-    ///Get access to the underlying stream_buf
-    basic_pipebuf<CharT, Traits>* rdbuf() {return &_buf;};
+	///Get access to the underlying stream_buf
+	basic_pipebuf<CharT, Traits>* rdbuf() const { return _buf; };
 
-    ///Default constructor.
-    basic_ipstream() : std::basic_istream<CharT, Traits>(&_buf)
-    {
-    }
-    ///Copy constructor.
-    basic_ipstream(const basic_ipstream & ) = delete;
-    ///Move constructor.
-	basic_ipstream(basic_ipstream && rhs) : basic_ipstream()
+	///Default constructor.
+	basic_stream() : StreamT<CharT, Traits>(&_buf)
 	{
-		std::basic_istream<CharT, Traits>::swap(rhs);
+	}
+	///Copy constructor.
+	basic_stream(const basic_stream &) = delete;
+	///Move constructor.
+	basic_stream(basic_stream && rhs) : basic_stream()
+	{
+		StreamT<CharT, Traits>::swap(rhs);
 		_buf = std::move(rhs._buf);
 	}
 
-    ///Move construct from a pipe.
-    basic_ipstream(pipe_type && p)      : basic_ipstream(), _buf(std::move(p))
-    {
-    }
-
-    ///Copy construct from a pipe.
-    basic_ipstream(const pipe_type & p) : basic_ipstream(), _buf(p)
-    {
-    }
-
-    ///Copy assignment.
-    basic_ipstream& operator=(const basic_ipstream & ) = delete;
-    ///Move assignment
-	basic_ipstream& operator=(basic_ipstream && rhs)
+	///Move construct from a pipe.
+	basic_stream(pipe_type && p) : basic_ipstream(), _buf(std::move(p))
+	{
+	}
+	///Copy construct from a pipe.
+	basic_stream(const pipe_type & p) : basic_ipstream(), _buf(p)
+	{
+	}
+	///Copy assignment.
+	basic_stream& operator=(const basic_stream &) = delete;
+	///Move assignment
+	basic_stream& operator=(basic_stream && rhs)
 	{
 		if (this != std::addressof(rhs))
 		{
-			std::basic_istream<CharT, Traits>::swap(rhs);
+			StreamT<CharT, Traits>::swap(rhs);
 			_buf = std::move(rhs._buf);
 		}
 		return *this;
 	}
-    ///Move assignment of a pipe.
-    basic_ipstream& operator=(pipe_type && p)
-    {
-        _buf = std::move(p);
-        return *this;
-    }
-    ///Copy assignment of a pipe.
-    basic_ipstream& operator=(const pipe_type & p)
-    {
-        _buf = p;
-        return *this;
-    }
-    ///Set the pipe of the streambuf.
-    void pipe(pipe_type&& p)      {_buf.pipe(std::move(p)); }
-    ///Set the pipe of the streambuf.
-    void pipe(const pipe_type& p) {_buf.pipe(p); }
-    ///Get a reference to the pipe.
-    pipe_type &      pipe() &       {return _buf.pipe();}
-    ///Get a const reference to the pipe.
-    const pipe_type &pipe() const & {return _buf.pipe();}
-    ///Get a rvalue reference to the pipe. Qualified as rvalue.
-    pipe_type &&     pipe()  &&     {return std::move(_buf).pipe();}
+	///Move assignment of a pipe.
+	basic_stream& operator=(pipe_type && p)
+	{
+		_buf = std::move(p);
+		return *this;
+	}
+	///Copy assignment of a pipe.
+	basic_stream& operator=(const pipe_type & p)
+	{
+		_buf = p;
+		return *this;
+	}
+	///Set the pipe of the streambuf.
+	void pipe(pipe_type&& p) { _buf.pipe(std::move(p)); }
+	///Set the pipe of the streambuf.
+	void pipe(const pipe_type& p) { _buf.pipe(p); }
+	///Get a reference to the pipe.
+	pipe_type &      pipe() & { return _buf.pipe(); }
+	///Get a const reference to the pipe.
+	const pipe_type &pipe() const & { return _buf.pipe(); }
+	///Get a rvalue reference to the pipe. Qualified as rvalue.
+	pipe_type &&     pipe() && {return std::move(_buf).pipe(); }
 };
+
+/** Implementation of a reading pipe stream.
+*
+*/
+template<
+	class CharT,
+	class Traits = std::char_traits<CharT>>
+using basic_ipstream = basic_stream<std::basic_istream, CharT, Traits>;
 
 typedef basic_ipstream<char>     ipstream;
 typedef basic_ipstream<wchar_t> wipstream;
@@ -330,81 +337,9 @@ typedef basic_ipstream<wchar_t> wipstream;
  *
  */
 template<
-    class CharT,
-    class Traits = std::char_traits<CharT>
->
-class basic_opstream : public std::basic_ostream<CharT, Traits>
-{
-    basic_pipebuf<CharT, Traits> _buf;
-public:
-    typedef basic_pipe<CharT, Traits> pipe_type;
-
-    typedef           CharT            char_type  ;
-    typedef           Traits           traits_type;
-    typedef  typename Traits::int_type int_type   ;
-    typedef  typename Traits::pos_type pos_type   ;
-    typedef  typename Traits::off_type off_type   ;
-
-
-    ///Get access to the underlying stream_buf
-    basic_pipebuf<CharT, Traits>* rdbuf() const {return _buf;};
-
-    ///Default constructor.
-    basic_opstream() : std::basic_ostream<CharT, Traits>(&_buf)
-    {
-    }
-    ///Copy constructor.
-    basic_opstream(const basic_opstream & ) = delete;
-    ///Move constructor.
-	basic_opstream(basic_opstream && rhs) : basic_opstream()
-	{
-		std::basic_ostream<CharT, Traits>::swap(rhs);
-		_buf = std::move(rhs._buf);
-	}
-
-    ///Move construct from a pipe.
-    basic_opstream(pipe_type && p)      : basic_ipstream(), _buf(std::move(p))
-    {
-    }
-    ///Copy construct from a pipe.
-    basic_opstream(const pipe_type & p) : basic_ipstream(), _buf(p)
-    {
-    }
-    ///Copy assignment.
-    basic_opstream& operator=(const basic_opstream & ) = delete;
-    ///Move assignment
-	basic_opstream& operator=(basic_opstream && rhs)
-	{
-		if (this != std::addressof(rhs))
-		{
-			std::basic_ostream<CharT, Traits>::swap(rhs);
-			_buf = std::move(rhs._buf);
-		}
-		return *this;
-	}
-    ///Move assignment of a pipe.
-    basic_opstream& operator=(pipe_type && p)
-    {
-        _buf = std::move(p);
-        return *this;
-    }
-    ///Copy assignment of a pipe.
-    basic_opstream& operator=(const pipe_type & p)
-    {
-        _buf = p;
-        return *this;
-    }
-    ///Set the pipe of the streambuf.
-    void pipe(pipe_type&& p)      {_buf.pipe(std::move(p)); }
-    ///Set the pipe of the streambuf.
-    void pipe(const pipe_type& p) {_buf.pipe(p); }
-    ///Get a reference to the pipe.
-    pipe_type &      pipe() &       {return _buf.pipe();}
-    ///Get a const reference to the pipe.
-    const pipe_type &pipe() const & {return _buf.pipe();}
-    ///Get a rvalue reference to the pipe. Qualified as rvalue.
-    pipe_type &&     pipe()  &&     {return std::move(_buf).pipe();}
-};
+	class CharT,
+	class Traits = std::char_traits<CharT>>
+using basic_opstream = basic_stream<std::basic_ostream, CharT, Traits>;
 
 typedef basic_opstream<char>     opstream;
 typedef basic_opstream<wchar_t> wopstream;
@@ -414,72 +349,9 @@ typedef basic_opstream<wchar_t> wopstream;
  *
  */
 template<
-    class CharT,
-    class Traits = std::char_traits<CharT>
->
-class basic_pstream : public std::basic_iostream<CharT, Traits>
-{
-    basic_pipebuf<CharT, Traits> _buf;
-public:
-    typedef basic_pipe<CharT, Traits> pipe_type;
-
-    typedef           CharT            char_type  ;
-    typedef           Traits           traits_type;
-    typedef  typename Traits::int_type int_type   ;
-    typedef  typename Traits::pos_type pos_type   ;
-    typedef  typename Traits::off_type off_type   ;
-
-
-    ///Get access to the underlying stream_buf
-    basic_pipebuf<CharT, Traits>* rdbuf() const {return _buf;};
-
-    ///Default constructor.
-    basic_pstream() : std::basic_iostream<CharT, Traits>(nullptr)
-    {
-        std::basic_iostream<CharT, Traits>::rdbuf(&_buf);
-    };
-    ///Copy constructor.
-    basic_pstream(const basic_pstream & ) = delete;
-    ///Move constructor.
-    basic_pstream(basic_pstream && ) = default;
-
-    ///Move construct from a pipe.
-    basic_pstream(pipe_type && p)      : std::basic_iostream<CharT, Traits>(nullptr), _buf(std::move(p))
-    {
-        std::basic_iostream<CharT, Traits>::rdbuf(&_buf);
-    };
-    ///Copy construct from a pipe.
-    basic_pstream(const pipe_type & p) : std::basic_iostream<CharT, Traits>(nullptr), _buf(p)
-    {
-        std::basic_iostream<CharT, Traits>::rdbuf(&_buf);
-    };
-    ///Copy assignment.
-    basic_pstream& operator=(const basic_pstream & ) = delete;
-    ///Move assignment
-    basic_pstream& operator=(basic_pstream && ) = default;
-    ///Move assignment of a pipe.
-    basic_pstream& operator=(pipe_type && p)
-    {
-        _buf = std::move(p);
-        return *this;
-    }
-    ///Copy assignment of a pipe.
-    basic_pstream& operator=(const pipe_type & p)
-    {
-        _buf = p;
-        return *this;
-    }
-    ///Set the pipe of the streambuf.
-    void pipe(pipe_type&& p)      {_buf.pipe(std::move(p)); }
-    ///Set the pipe of the streambuf.
-    void pipe(const pipe_type& p) {_buf.pipe(p); }
-    ///Get a reference to the pipe.
-    pipe_type &      pipe() &       {return _buf.pipe();}
-    ///Get a const reference to the pipe.
-    const pipe_type &pipe() const & {return _buf.pipe();}
-    ///Get a rvalue reference to the pipe. Qualified as rvalue.
-    pipe_type &&     pipe()  &&     {return std::move(_buf).pipe();}
-};
+	class CharT,
+	class Traits = std::char_traits<CharT>>
+using basic_pstream = basic_stream<std::basic_iostream, CharT, Traits>;
 
 typedef basic_pstream<char>     pstream;
 typedef basic_pstream<wchar_t> wpstream;
