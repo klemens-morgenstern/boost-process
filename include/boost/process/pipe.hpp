@@ -265,8 +265,9 @@ public:
     basic_pipebuf<CharT, Traits>* rdbuf() {return &_buf;};
 
     ///Default constructor.
-    basic_ipstream() : std::basic_istream<CharT, Traits>(&_buf)
+    basic_ipstream() : std::basic_istream<CharT, Traits>(nullptr)
     {
+		std::basic_istream<CharT, Traits>::rdbuf(&_buf);
     }
     ///Copy constructor.
     basic_ipstream(const basic_ipstream & ) = delete;
@@ -350,8 +351,9 @@ public:
     basic_pipebuf<CharT, Traits>* rdbuf() const {return _buf;};
 
     ///Default constructor.
-    basic_opstream() : std::basic_ostream<CharT, Traits>(&_buf)
+    basic_opstream() : std::basic_ostream<CharT, Traits>(nullptr)
     {
+		std::basic_ostream<CharT, Traits>::rdbuf(&_buf);
     }
     ///Copy constructor.
     basic_opstream(const basic_opstream & ) = delete;
@@ -441,22 +443,32 @@ public:
     ///Copy constructor.
     basic_pstream(const basic_pstream & ) = delete;
     ///Move constructor.
-    basic_pstream(basic_pstream && ) = default;
+	basic_pstream(basic_pstream && rhs) : basic_pstream()
+	{
+		std::basic_iostream<CharT, Traits>::swap(rhs);
+		_buf = std::move(rhs._buf);
+	}
 
     ///Move construct from a pipe.
-    basic_pstream(pipe_type && p)      : std::basic_iostream<CharT, Traits>(nullptr), _buf(std::move(p))
+    basic_pstream(pipe_type && p)      : basic_pstream(), _buf(std::move(p))
     {
-        std::basic_iostream<CharT, Traits>::rdbuf(&_buf);
-    };
+    }
     ///Copy construct from a pipe.
-    basic_pstream(const pipe_type & p) : std::basic_iostream<CharT, Traits>(nullptr), _buf(p)
+    basic_pstream(const pipe_type & p) : basic_pstream, _buf(p)
     {
-        std::basic_iostream<CharT, Traits>::rdbuf(&_buf);
-    };
+    }
     ///Copy assignment.
     basic_pstream& operator=(const basic_pstream & ) = delete;
     ///Move assignment
-    basic_pstream& operator=(basic_pstream && ) = default;
+	basic_pstream& operator=(basic_pstream && rhs)
+	{
+		if (this != std::addressof(rhs))
+		{
+			std::basic_iostream<CharT, Traits>::swap(rhs);
+			_buf = std::move(rhs._buf);
+		}
+		return *this;
+	}
     ///Move assignment of a pipe.
     basic_pstream& operator=(pipe_type && p)
     {
