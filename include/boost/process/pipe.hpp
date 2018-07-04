@@ -266,8 +266,9 @@ public:
 	basic_pipebuf<CharT, Traits>* rdbuf() const { return _buf; };
 
 	///Default constructor.
-	basic_stream() : StreamT<CharT, Traits>(&_buf)
+	basic_stream() : StreamT<CharT, Traits>(nullptr)
 	{
+		StreamT<CharT, Traits>::rdbuf(&_buf);
 	}
 	///Copy constructor.
 	basic_stream(const basic_stream &) = delete;
