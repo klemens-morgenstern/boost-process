@@ -365,6 +365,27 @@ child executor<Sequence>::invoke(boost::mpl::true_, boost::mpl::false_) //ignore
     return c;
 }
 
+struct _pipe_gc_t
+{
+  _pipe_gc_t(const int (&p)[2])
+    : _p(p)
+  {
+  }
+
+  ~_pipe_gc_t()
+  {
+    if (_p[1] != 0)
+    {
+      ::close(_p[1]);
+    }
+    if (_p[0] != 0)
+    {
+      ::close(_p[0]);
+    }
+  }
+  const int (&_p)[2];
+};
+
 template<typename Sequence>
 child executor<Sequence>::invoke(boost::mpl::false_, boost::mpl::false_)
 {
@@ -374,6 +395,7 @@ child executor<Sequence>::invoke(boost::mpl::false_, boost::mpl::false_)
         set_error(::boost::process::detail::get_last_error(), "pipe(2) failed");
         return child();
     }
+    _pipe_gc_t pgc(p);
     if (::fcntl(p[1], F_SETFD, FD_CLOEXEC) == -1)
     {
         set_error(::boost::process::detail::get_last_error(), "fcntl(2) failed");
@@ -422,9 +444,7 @@ child executor<Sequence>::invoke(boost::mpl::false_, boost::mpl::false_)
 
 
 
-    ::close(p[1]);
     _read_error(p[0]);
-    ::close(p[0]);
 
     if (_ec)
     {

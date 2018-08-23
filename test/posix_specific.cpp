@@ -11,6 +11,8 @@
 #define BOOST_TEST_IGNORE_SIGCHLD
 #include <boost/test/included/unit_test.hpp>
 
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/process.hpp>
 #include <boost/process/posix.hpp>
 
@@ -19,9 +21,11 @@
 
 #include <string>
 #include <sys/wait.h>
+#include <unistd.h>
 #include <errno.h>
 
 namespace bp = boost::process;
+namespace fs = boost::filesystem;
 
 BOOST_AUTO_TEST_CASE(bind_fd, *boost::unit_test::timeout(2))
 {
@@ -98,4 +102,28 @@ BOOST_AUTO_TEST_CASE(execve_throw_on_error, *boost::unit_test::timeout(2))
         BOOST_CHECK(e.code());
         BOOST_CHECK_EQUAL(e.code().value(), ENOENT);
     }
+}
+
+namespace
+{
+  size_t GetFdCount()
+  {
+    return std::distance(fs::directory_iterator(
+          fs::path("/proc") /
+          boost::lexical_cast<std::string>(::getpid()) / "fd"),
+        fs::directory_iterator());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(child_clean_fds, *boost::unit_test::timeout(2))
+{
+  size_t fdCountBefore = GetFdCount();
+  try
+  {
+    bp::child c("/doesnt-exist");
+  }
+  catch (const bp::process_error&)
+  {
+  }
+  BOOST_CHECK_EQUAL(GetFdCount(), fdCountBefore);
 }
