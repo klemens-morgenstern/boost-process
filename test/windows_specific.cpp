@@ -89,4 +89,51 @@ BOOST_AUTO_TEST_CASE(startup_info_ex)
     BOOST_CHECK_EQUAL(cnt, 2);
 }
 
+
+struct set_unicode_environment
+{
+    int &cnt;
+    template<typename T>
+    void operator()(T &e) const
+    {
+        cnt++;
+        e.creation_flags |= ::boost::winapi::CREATE_UNICODE_ENVIRONMENT_;
+    }
+
+};
+
+struct check_unicode_environment
+{
+    int &cnt;
+    template<typename T>
+    void operator()(T &e) const
+    {
+        cnt++;
+        BOOST_CHECK(e.creation_flags & ::boost::winapi::CREATE_UNICODE_ENVIRONMENT_);
+    }
+
+};
+
+BOOST_AUTO_TEST_CASE(startup_info_ex_flag_or)
+{
+    using boost::unit_test::framework::master_test_suite;
+
+    bp::ipstream is;
+
+    int cnt = 0;
+
+    std::error_code ec;
+    bp::child c(
+        master_test_suite().argv[1],
+        bp::extend::on_setup(set_unicode_environment{cnt}),
+        bp::extend::on_setup(set_startup_info{cnt}),
+        bp::extend::on_success(check_startup_info{cnt}),
+        bp::extend::on_success(check_unicode_environment{cnt}),
+        bp::std_out>is,
+        ec
+    );
+    BOOST_REQUIRE(!ec);
+    BOOST_CHECK_EQUAL(cnt, 4);
+}
+
 #endif
