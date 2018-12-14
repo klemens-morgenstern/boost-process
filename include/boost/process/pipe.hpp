@@ -346,7 +346,7 @@ public:
 
 
     ///Get access to the underlying stream_buf
-    basic_pipebuf<CharT, Traits>* rdbuf() const {return _buf;};
+    basic_pipebuf<CharT, Traits>* rdbuf() {return &_buf;};
 
     ///Default constructor.
     basic_opstream() : std::basic_ostream<CharT, Traits>(nullptr)
@@ -429,7 +429,7 @@ public:
 
 
     ///Get access to the underlying stream_buf
-    basic_pipebuf<CharT, Traits>* rdbuf() const {return _buf;};
+    basic_pipebuf<CharT, Traits>* rdbuf() {return &_buf;};
 
     ///Default constructor.
     basic_pstream() : std::basic_iostream<CharT, Traits>(nullptr)
