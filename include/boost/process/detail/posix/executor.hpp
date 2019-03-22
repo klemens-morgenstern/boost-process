@@ -283,7 +283,6 @@ class executor
         }
         if (count == 0)
         {
-            ::close(source);
             return  ;
         }
 
@@ -299,11 +298,9 @@ class executor
                 //EAGAIN not yet forked, EINTR interrupted, i.e. try again
             else if ((err != EAGAIN ) && (err != EINTR))
             {
-                ::close(source);
                 set_error(std::error_code(err, std::system_category()), "Error read pipe");
             }
         }
-        ::close(source);
         set_error(ec, std::move(msg));
     }
 
@@ -432,6 +429,7 @@ child executor<Sequence>::invoke(boost::mpl::false_, boost::mpl::false_)
 
     ::close(p[1]);
     _read_error(p[0]);
+    ::close(p[0]);
 
     if (_ec)
     {
