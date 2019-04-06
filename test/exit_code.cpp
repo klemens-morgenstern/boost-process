@@ -8,7 +8,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_TEST_MAIN
-#define BOOST_TEST_IGNORE_SIGCHLD
+
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/process/error.hpp>
@@ -48,15 +48,36 @@ BOOST_AUTO_TEST_CASE(sync_wait)
     c.wait();
 }
 
+BOOST_AUTO_TEST_CASE(sync_wait_abort)
+{
+    using boost::unit_test::framework::master_test_suite;
+
+    std::error_code ec;
+    bp::child c(
+        master_test_suite().argv[1],
+        "test", "--abort",
+        ec
+    );
+    BOOST_REQUIRE(!ec);
+    c.wait();
+    int exit_code = c.exit_code();
+
+
+    BOOST_CHECK(exit_code != 0);
+
+    c.wait();
+}
+
 #if defined(BOOST_WINDOWS_API)
 struct wait_handler
 {
     HANDLE handle_;
-
-    wait_handler(HANDLE handle) : handle_(handle) {}
+    bool &called_;
+    wait_handler(HANDLE handle, bool &called) : handle_(handle), called_(called) {}
 
     void operator()(const boost::system::error_code &ec)
     {
+        called_ = true;
         BOOST_REQUIRE(!ec);
         DWORD exit_code;
         BOOST_REQUIRE(GetExitCodeProcess(handle_, &exit_code));
@@ -66,8 +87,13 @@ struct wait_handler
 #elif defined(BOOST_POSIX_API)
 struct wait_handler
 {
+    bool &called_;
+
+    wait_handler (bool & called) : called_(called) {}
+
     void operator()(const boost::system::error_code &ec, int signal)
     {
+        called_ = true;
         BOOST_REQUIRE(!ec);
         BOOST_REQUIRE_EQUAL(SIGCHLD, signal);
         int status;
@@ -84,9 +110,14 @@ BOOST_AUTO_TEST_CASE(async_wait)
 
     boost::asio::io_context io_context;
 
+    boost::asio::deadline_timer timeout{io_context, boost::posix_time::seconds(3)};
+    timeout.async_wait([&](boost::system::error_code ec){if (!ec) io_context.stop();});
+
+
+    bool wh_called = false;
 #if defined(BOOST_POSIX_API)
     signal_set set(io_context, SIGCHLD);
-    set.async_wait(wait_handler());
+    set.async_wait(wait_handler(wh_called));
 #endif
 
     std::error_code ec;
@@ -98,10 +129,11 @@ BOOST_AUTO_TEST_CASE(async_wait)
     BOOST_REQUIRE(!ec);
 
 #if defined(BOOST_WINDOWS_API)
-    windows::object_handle handle(io_context, c.native_handle());
-    handle.async_wait(wait_handler(handle.native_handle()));
+    windows::object_handle handle(io_context.get_executor(), c.native_handle());
+    handle.async_wait(wait_handler(handle.native_handle(), wh_called));
 #endif
     std::cout << "async_wait 1" << std::endl;
     io_context.run();
     std::cout << "async_wait 2" << std::endl;
+    BOOST_CHECK_MESSAGE(wh_called, "Wait handler not called");
 }

@@ -27,6 +27,7 @@
 #include <iostream>
 #include <cstdlib>
 
+BOOST_AUTO_TEST_SUITE( pipe_tests );
 
 namespace bp = boost::process;
 
@@ -49,6 +50,8 @@ BOOST_AUTO_TEST_CASE(sync_io, *boost::unit_test::timeout(5))
         ec
     );
     BOOST_REQUIRE(!ec);
+
+    BOOST_TEST_INFO("Launching child 2");
 
     bp::child c2(
         master_test_suite().argv[1],
@@ -74,3 +77,4 @@ BOOST_AUTO_TEST_CASE(sync_io, *boost::unit_test::timeout(5))
 
 }
 
+BOOST_AUTO_TEST_SUITE_END();

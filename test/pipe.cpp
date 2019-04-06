@@ -11,9 +11,13 @@
 #include <thread>
 
 #include <boost/process/pipe.hpp>
+#include <boost/process/environment.hpp>
 
 using namespace std;
 namespace bp = boost::process;
+
+BOOST_AUTO_TEST_SUITE( pipe_tests );
+
 
 BOOST_AUTO_TEST_CASE(plain, *boost::unit_test::timeout(2))
 {
@@ -35,7 +39,8 @@ BOOST_AUTO_TEST_CASE(named, *boost::unit_test::timeout(2))
 #if defined( BOOST_WINDOWS_API )
     bp::pipe pipe("\\\\.\\pipe\\pipe_name");
 #elif defined( BOOST_POSIX_API )
-    bp::pipe pipe("./test_pipe");
+    const auto home_path = boost::this_process::environment()["HOME"].to_string();
+    bp::pipe pipe(home_path  + "/.boost_process_test_pipe");
 #endif
 
     std::string in  = "xyz";
@@ -230,3 +235,4 @@ BOOST_AUTO_TEST_CASE(coverage, *boost::unit_test::timeout(5))
     }
 }
 
+BOOST_AUTO_TEST_SUITE_END();

@@ -57,6 +57,10 @@ inline std::error_code get_last_error() noexcept
 #define BOOST_POSIX_HAS_VFORK 1
 #endif
 
+#if (_POSIX_C_SOURCE >= 199309L)
+#define BOOST_POSIX_HAS_SIGTIMEDWAIT 1
+#endif
+
 #elif defined(BOOST_WINDOWS_API)
 namespace windows {namespace extensions {}}
 namespace api = windows;
@@ -82,16 +86,16 @@ inline void throw_last_error()
     throw process_error(get_last_error());
 }
 
-inline void throw_error(const std::error_code& err)
+inline void throw_error(const std::error_code& ec)
 {
-  if (err)
-    throw process_error(err);
+    if (ec)
+        throw process_error(ec);
 }
 
-inline void throw_error(const std::error_code& err, const char* location)
+inline void throw_error(const std::error_code& ec, const char* msg)
 {
-  if (err)
-    throw process_error(err, location);
+    if (ec)
+        throw process_error(ec, msg);
 }
 
 template<typename Char> constexpr Char null_char();

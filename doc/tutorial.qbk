@@ -104,8 +104,8 @@ This also includes to add a file suffix on windows, such as `.exe` or `.bat`.]
 
 [section:launch_mode Launch functions]
 
-Given that in our example used the [funcref boost::process::system system] function, 
-our program will wait until the child process is completed. This maybe unwanted, 
+Given that our example used the [funcref boost::process::system system] function, 
+our program will wait until the child process is completed. This may be unwanted, 
 especially since compiling can take a while. 
 
 In order to avoid that, boost.process provides several ways to launch a process.
@@ -151,14 +151,14 @@ This can be avoided by calling __detach__ beforehand]
 
 Until now, we have assumed that everything works out, but it is not impossible, 
 that "g++" is not present. That will cause the launch of the process to fail.
-The default behaviour of all functions is to throw an 
+The default behaviour of all functions is to throw a 
 [@http://en.cppreference.com/w/cpp/error/system_error std::system_error] on failure.
 As with many other functions in this library, passing an [@http://en.cppreference.com/w/cpp/error/error_code std::error_code]
-will change the behaviour, so that instead of throwing an exception, the error will be a assigned to the error code.
+will change the behaviour, so that instead of throwing an exception, the error will be assigned to the error code.
 
 ```
 std::error_code ec;
-bp::system c("g++ main.cpp", ec);
+bp::system("g++ main.cpp", ec);
 ```
 [endsect]
 [section:io Synchronous I/O]
@@ -296,7 +296,7 @@ provided we also pass a reference to an io_service.
 
 ```
 io_service ios;
-std::vector<char> buf;
+std::vector<char> buf(4096);
 
 bp::child c(bp::search_path("g++"), "main.cpp", bp::std_out > asio_buffer(buf), ios);
 
