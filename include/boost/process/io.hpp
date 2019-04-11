@@ -234,7 +234,7 @@ struct std_out_
     template<typename Buffer>
     auto operator=(const Buffer & buf) const
             -> typename std::enable_if<asio::is_mutable_buffer_sequence<Buffer>::value,
-                                       api::async_out_buffer<p1, p2, typename std::remove_reference<Buffer>::type>>::type
+                                       api::async_out_buffer<p1, p2, const typename std::remove_reference<Buffer>::type>>::type
     {
         return buf;
     }
@@ -242,7 +242,7 @@ struct std_out_
     template<typename Buffer>
     auto operator>(const Buffer & buf) const
             -> typename std::enable_if<asio::is_mutable_buffer_sequence<Buffer>::value,
-                                       api::async_out_buffer<p1, p2, typename std::remove_reference<Buffer>::type>>::type
+                                       api::async_out_buffer<p1, p2, const typename std::remove_reference<Buffer>::type>>::type
     {
         return buf;
     }
