@@ -227,20 +227,22 @@ struct std_out_
     api::async_pipe_out<p1, p2> operator>(async_pipe & p) const {return p;}
 
     template<typename Allocator>
-    api::async_out_buffer<p1, p2, asio::basic_streambuf<Allocator>> operator=(boost::asio::basic_streambuf<Allocator> & p) const {return p;}
+    api::async_out_buffer<p1, p2, asio::basic_streambuf<Allocator>&> operator=(boost::asio::basic_streambuf<Allocator> & p) const {return p;}
     template<typename Allocator>
-    api::async_out_buffer<p1, p2, asio::basic_streambuf<Allocator>> operator>(boost::asio::basic_streambuf<Allocator> & p) const {return p;}
+    api::async_out_buffer<p1, p2, asio::basic_streambuf<Allocator>&> operator>(boost::asio::basic_streambuf<Allocator> & p) const {return p;}
 
     template<typename Buffer>
-    auto operator=(Buffer & buf) const
-            -> typename std::enable_if<asio::is_mutable_buffer_sequence<Buffer>::value, api::async_out_buffer<p1, p2, Buffer>>::type
+    auto operator=(const Buffer & buf) const
+            -> typename std::enable_if<asio::is_mutable_buffer_sequence<Buffer>::value,
+                                       api::async_out_buffer<p1, p2, typename std::remove_reference<Buffer>::type>>::type
     {
         return buf;
     }
 
     template<typename Buffer>
-    auto operator>(Buffer & buf) const
-            -> typename std::enable_if<asio::is_mutable_buffer_sequence<Buffer>::value, api::async_out_buffer<p1, p2, Buffer>>::type
+    auto operator>(const Buffer & buf) const
+            -> typename std::enable_if<asio::is_mutable_buffer_sequence<Buffer>::value,
+                                       api::async_out_buffer<p1, p2, typename std::remove_reference<Buffer>::type>>::type
     {
         return buf;
     }
