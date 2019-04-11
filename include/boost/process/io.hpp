@@ -232,14 +232,14 @@ struct std_out_
     api::async_out_buffer<p1, p2, asio::basic_streambuf<Allocator>> operator>(boost::asio::basic_streambuf<Allocator> & p) const {return p;}
 
     template<typename Buffer>
-    auto operator=(const Buffer & buf) const
+    auto operator=(Buffer & buf) const
             -> typename std::enable_if<asio::is_mutable_buffer_sequence<Buffer>::value, api::async_out_buffer<p1, p2, Buffer>>::type
     {
         return buf;
     }
 
     template<typename Buffer>
-    auto operator>(const Buffer & buf) const
+    auto operator>(Buffer & buf) const
             -> typename std::enable_if<asio::is_mutable_buffer_sequence<Buffer>::value, api::async_out_buffer<p1, p2, Buffer>>::type
     {
         return buf;
