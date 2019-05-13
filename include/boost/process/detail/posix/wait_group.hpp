@@ -162,7 +162,6 @@ inline bool wait_until(
     else if (timeout_pid == 0)
     {
         ::setpgid(0, p.grp);
-        std::cerr << "Starting the timeout" << std::endl;
         auto ts = get_timespec(time_out - Clock::now());
         ::timespec rem;
         while (ts.tv_sec > 0 || ts.tv_nsec > 0)
@@ -196,7 +195,7 @@ inline bool wait_until(
 
     while (!(timed_out = (Clock::now() > time_out)))
     {
-        std::cerr << "Going into timeout" << std::endl;
+        std::cerr << "Going into timeout " << std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - time_out).count() << std::endl;
         ret = ::waitid(P_PGID, p.grp, &siginfo, WEXITED | WSTOPPED);
 
         std::cerr << "Timed out : " << ret << std::endl;
