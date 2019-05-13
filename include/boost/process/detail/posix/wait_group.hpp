@@ -132,36 +132,27 @@ inline bool wait_until(
 #else
     //if we do not have sigtimedwait, we fork off a child process  to get the signal in time
 	std::cerr << "Grp: " << p.grp << std::endl;
-    static ::gid_t gid = 0;
-    gid = p.grp;
-    static thread_local auto sig_handler  =
-            +[](int sig)
-            {
-                std::cerr << "Sig: " << sig << " (" << SIGUSR1 << "/" << SIGUSR2 << ") GID: " << ::getpgid(0) << std::endl;
-                errno = 0;
-                if (sig == SIGUSR1)
-                    ::setpgid(0, 0);
-                else if (sig == SIGUSR2)
-                    ::setpgid(0, gid);
-
-                std::cerr << "Errno: " << errno << " My GID: " << ::getpgid(0) << std::endl;
-
-            };
-    auto sigusr1 = ::signal(SIGUSR1, sig_handler);
-    auto sigusr2 = ::signal(SIGUSR2, sig_handler);
-
-    pid_t timeout_pid = ::fork();
+    
+	int p_[2];
+	::pipe(p_);
+	pid_t timeout_pid = ::fork();
 
     if (timeout_pid == -1)
     {
         ec = boost::process::detail::get_last_error();
-        ::signal(SIGUSR1, sigusr1);
-        ::signal(SIGUSR2, sigusr2);
         return true;
     }
     else if (timeout_pid == 0)
     {
         ::setpgid(0, p.grp);
+		static ::gid_t gid = 0;
+		gid = p.grp;
+		::signal(SIGUSR1, +[](int){::setpgid(0, 0);});
+		::signal(SIGUSR2, +[](int){::setpgid(0, gid);});
+
+		::close(p_[0]);
+		::close(p_[1]);
+
         auto ts = get_timespec(time_out - Clock::now());
         ::timespec rem;
         while (ts.tv_sec > 0 || ts.tv_nsec > 0)
@@ -177,9 +168,6 @@ inline bool wait_until(
         std::cerr << "Exiting the timeout" << std::endl;
         ::exit(0);
     }
-    ::setpgid(timeout_pid, p.grp);
-    ::signal(SIGUSR1, sigusr1);
-    ::signal(SIGUSR2, sigusr2);
 
     struct child_cleaner_t
     {
@@ -192,6 +180,11 @@ inline bool wait_until(
         }
     };
     child_cleaner_t child_cleaner{timeout_pid};
+	
+	::close(p_[1]);
+	::read (p_[0], &p_[1], 1u);
+	::close(p_[0]);
+
 
     while (!(timed_out = (Clock::now() > time_out)))
     {
