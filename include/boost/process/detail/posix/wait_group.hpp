@@ -144,7 +144,7 @@ inline bool wait_until(
                 else if (sig == SIGUSR2)
                     ::setpgid(0, gid);
 
-                std::cerr << "Errno: " << errno << " My GID: " << ::getpdig(0) << std::endl;
+                std::cerr << "Errno: " << errno << " My GID: " << ::getpgid(0) << std::endl;
 
             };
     auto sigusr1 = ::signal(SIGUSR1, sig_handler);
