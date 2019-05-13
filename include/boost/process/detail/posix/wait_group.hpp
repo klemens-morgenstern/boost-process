@@ -137,12 +137,14 @@ inline bool wait_until(
     static thread_local auto sig_handler  =
             +[](int sig)
             {
-                std::cerr << "Sig: " << sig << " (" << SIGUSR1 << "/" << SIGUSR2 << ")" << std::endl;
+                std::cerr << "Sig: " << sig << " (" << SIGUSR1 << "/" << SIGUSR2 << ") GID: " << ::getpgid(0) << std::endl;
                 errno = 0;
                 if (sig == SIGUSR1)
                     ::setpgid(0, 0);
                 else if (sig == SIGUSR2)
                     ::setpgid(0, gid);
+
+                std::cerr << "Errno: " << errno << " My GID: " << ::getpdig(0) << std::endl;
 
             };
     auto sigusr1 = ::signal(SIGUSR1, sig_handler);
