@@ -160,6 +160,7 @@ inline bool wait_until(
     else if (timeout_pid == 0)
     {
         ::setpgid(0, p.grp);
+        std::cerr << "Starting the timeout" << std::endl;
         auto ts = get_timespec(time_out - Clock::now());
         ::timespec rem;
         while (ts.tv_sec > 0 || ts.tv_nsec > 0)
@@ -172,9 +173,10 @@ inline bool wait_until(
             }
             ts = get_timespec(time_out - Clock::now());
         }
+        std::cerr << "Exiting the timeout" << std::endl;
         ::exit(0);
     }
-
+    ::setpgid(timeout_pid, p.grp);
     ::signal(SIGUSR1, sigusr1);
     ::signal(SIGUSR2, sigusr2);
 
@@ -192,7 +194,11 @@ inline bool wait_until(
 
     while (!(timed_out = (Clock::now() > time_out)))
     {
+        std::cerr << "Going into timeout" << std::endl;
         ret = ::waitid(P_PGID, p.grp, &siginfo, WEXITED | WSTOPPED);
+
+        std::cerr << "Timed out : " << ret << std::endl;
+
         if (ret == -1)
         {
             if ((errno == ECHILD) || (errno == ESRCH))
@@ -208,6 +214,7 @@ inline bool wait_until(
         //if it is not, we gotta check who the signal came from, so let's remove the process from the group
         //check if the group is empty -> will give an error of ECHILD
         ret = ::waitid(P_PGID, p.grp, &siginfo, WEXITED | WCONTINUED | WNOWAIT | WNOHANG);
+        std::cerr << "And repeat: " << ret << std::endl;
 
         if (ret == -1)
         {
