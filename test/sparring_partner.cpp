@@ -223,5 +223,10 @@ int main(int argc, char *argv[])
         std::cout << si.dwFlags << std::endl;
     }
 #endif
+    std::cerr   << "Exiting Sparring-Partner: "
+#if defined(BOOST_POSIX_API)
+                << ::getpgid(0)
+#endif
+                << std::endl;
     return EXIT_SUCCESS;
 }
