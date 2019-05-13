@@ -131,7 +131,7 @@ inline bool wait_until(
 
 #else
     //if we do not have sigtimedwait, we fork off a child process  to get the signal in time
-
+	std::cerr << "Grp: " << p.grp << std::endl;
     static ::gid_t gid = 0;
     gid = p.grp;
     static thread_local auto sig_handler  =
@@ -211,7 +211,8 @@ inline bool wait_until(
             return false;
         }
 
-        ::kill(timeout_pid, SIGUSR1);
+        std::cerr << "SIGUSR1: " << ::kill(timeout_pid, SIGUSR1) << ", " << errno << std::endl;
+		
         //if it is not, we gotta check who the signal came from, so let's remove the process from the group
         //check if the group is empty -> will give an error of ECHILD
         ret = ::waitid(P_PGID, p.grp, &siginfo, WEXITED | WCONTINUED | WNOWAIT | WNOHANG);
