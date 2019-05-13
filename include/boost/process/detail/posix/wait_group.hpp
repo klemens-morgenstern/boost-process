@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <iostream>
 
 namespace boost { namespace process { namespace detail { namespace posix {
 
@@ -75,7 +76,7 @@ inline bool wait_until(
     bool timed_out = false;
     int ret;
 
-#if defined(BOOST_POSIX_HAS_SIGTIMEDWAIT)
+#if defined(BOOST_POSIX_HAS_SIGTIMEDWAIT) && false
 
     ::sigset_t  sigset;
 
@@ -133,9 +134,10 @@ inline bool wait_until(
 
     static ::gid_t gid = 0;
     gid = p.grp;
-    static auto sig_handler  =
+    static thread_local auto sig_handler  =
             +[](int sig)
             {
+                std::cerr << "Sig: " << sig << " (" << SIGUSR1 << "/" << SIGUSR2 << ")" << std::endl;
                 errno = 0;
                 if (sig == SIGUSR1)
                     ::setpgid(0, 0);
