@@ -218,6 +218,7 @@ inline bool wait_until(
 
         if (ret == -1)
         {
+            std::cerr << errno << " , " << ECHILD << " -> " << ESRCH << std::endl;
             if ((errno == ECHILD) || (errno == ESRCH))
             {
                 ec.clear();
