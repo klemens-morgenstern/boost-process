@@ -107,7 +107,7 @@ inline bool wait_until(
         if ((ret == SIGCHLD) && (old_sig.sa_handler != SIG_DFL) && (old_sig.sa_handler != SIG_IGN))
             old_sig.sa_handler(ret);
 
-        ret = ::waitpid(-p.grp, &siginfo.si_status, 0); //so in case it exited, we wanna reap it first
+        ret = ::waitpid(-p.grp, &siginfo.si_status, WEXITED | WNOHANG); //so in case it exited, we wanna reap it first
         if (ret == -1)
         {
 			if ((errno == ECHILD) || (errno == ESRCH))
