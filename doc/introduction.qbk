@@ -1,6 +1,6 @@
 [section:introduction Introduction]
 
-Boost.Process is a library to manage system processes. It can be used to:
+Boost.Process is a C+11 library to manage system processes. It can be used to:
 
 * create child processes
 * setup streams for child processes
