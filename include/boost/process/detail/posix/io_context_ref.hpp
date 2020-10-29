@@ -9,6 +9,7 @@
 #include <boost/process/detail/posix/handler.hpp>
 #include <boost/process/detail/posix/async_handler.hpp>
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/signal_set.hpp>
 
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/fusion/algorithm/transformation/filter_if.hpp>
@@ -16,8 +17,6 @@
 #include <boost/fusion/view/transform_view.hpp>
 #include <boost/fusion/container/vector/convert.hpp>
 
-
-#include <boost/process/detail/posix/sigchld_service.hpp>
 #include <boost/process/detail/posix/is_running.hpp>
 
 #include <functional>
@@ -95,15 +94,34 @@ struct io_context_ref : handler_base_ext
         boost::fusion::for_each(asyncs, async_handler_collector<Executor>(exec, funcs));
 
         auto & es = exec.exit_status;
+        auto pid = exec.pid;
 
-        auto wh = [funcs, es](int val, const std::error_code & ec)
-                {
-                    es->store(val);
-                    for (auto & func : funcs)
-                        func(::boost::process::detail::posix::eval_exit_status(val), ec);
-                };
+        auto h = [funcs, es](int val, const std::error_code & ec)
+        {
+            es->store(val);
+            for (auto & func : funcs)
+                func(::boost::process::detail::posix::eval_exit_status(val), ec);
+        };
 
-        sigchld_service.async_wait(exec.pid, std::move(wh));
+        auto sigchld_service = std::make_shared<boost::asio::signal_set>(ios, SIGCHLD);
+
+        auto handle_sigchld = std::make_shared<std::function<void(boost::system::error_code, int)>>();
+        *handle_sigchld = [this, pid, h, handle_sigchld, sigchld_service](boost::system::error_code ec, int)
+        {
+            if (ec)
+                h(-1, ec);
+            //check if the child actually is running first
+            int status;
+            auto pid_res = ::waitpid(pid, &status, WNOHANG);
+            if (pid_res < 0)
+                h(-1, get_last_error());
+            else if ((pid_res == pid) && (WIFEXITED(status) || WIFSIGNALED(status)))
+                h(status, {}); //successfully exited already
+            else //still running
+                sigchld_service->async_wait(*handle_sigchld);
+        };
+
+        sigchld_service->async_wait(*handle_sigchld);
     }
 
     template<typename Executor>
@@ -117,7 +135,6 @@ struct io_context_ref : handler_base_ext
 
 private:
     boost::asio::io_context &ios;
-    boost::process::detail::posix::sigchld_service &sigchld_service = boost::asio::use_service<boost::process::detail::posix::sigchld_service>(ios);
 };
 
 }}}}
