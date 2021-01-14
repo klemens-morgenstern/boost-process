@@ -156,9 +156,19 @@ inline bool wait_until(
         pid_t pid;
         ~child_cleaner_t()
         {
-            int res;
             ::kill(pid, SIGKILL);
-            ::waitpid(pid, &res, WNOHANG);
+            int res;
+            int ret = ::waitpid(pid, &res, WNOHANG);
+
+            int attempted_cleanup = 5;
+            struct timespec wait_time = {0}, rem = {0};
+            while(ret == 0 && attempted_cleanup > 0 )
+            {
+                wait_time.tv_nsec = 50000000L; // .05 sec 
+                nanosleep(&wait_time, &rem);
+                ret = ::waitpid(pid, &res, WNOHANG);
+                attempted_cleanup--;
+            }
         }
     };
     child_cleaner_t child_cleaner{timeout_pid};
