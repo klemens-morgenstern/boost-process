@@ -147,7 +147,6 @@ class executor
     template<typename HasHandler, typename UseVFork>
     void internal_error_handle(const std::error_code&, const char*, HasHandler, boost::mpl::true_, UseVFork) {}
 
-    int _pipe_sink = -1;
 
     void write_error(const std::error_code & ec, const char * msg)
     {
@@ -318,6 +317,8 @@ public:
     std::shared_ptr<std::atomic<int>> exit_status = std::make_shared<std::atomic<int>>(still_active);
 
     const std::error_code & error() const {return _ec;}
+	int _pipe_sink = -1;
+
 
     void set_error(const std::error_code &ec, const char* msg)
     {
